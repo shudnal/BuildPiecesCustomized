@@ -39,6 +39,8 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<string> prefabListNoRoofWear;
         internal static ConfigEntry<string> prefabListNoSupportWear;
 
+        internal static readonly Dictionary<WearNTear.MaterialType, MaterialPropertiesConfig> materialConfigs = new Dictionary<WearNTear.MaterialType, MaterialPropertiesConfig>();
+
         internal static BuildPiecesCustomized instance;
 
         private static readonly CustomSyncedValue<Dictionary<string, string>> configsJSON = new CustomSyncedValue<Dictionary<string, string>>(configSync, "JSON configs", new Dictionary<string, string>());
@@ -53,6 +55,14 @@ namespace BuildPiecesCustomized
         private static FileSystemWatcher fileSystemWatcherConfig;
 
         internal const string allPiecesIdentifier = "AllPieces";
+
+        internal class MaterialPropertiesConfig
+        {
+            public ConfigEntry<float> maxSupport;
+            public ConfigEntry<float> minSupport;
+            public ConfigEntry<float> verticalLoss;
+            public ConfigEntry<float> horizontalLoss;
+        }
 
         private void Awake()
         {
@@ -98,16 +108,27 @@ namespace BuildPiecesCustomized
             configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
             loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Not Synced with Server]", false);
 
-            toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe", "Comma separated list of tool prefab name");
+            toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe", "Comma-separated list of tool prefab name to get build pieces from");
 
-            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma separated list of pieces that will clip through each other. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListAllowedInDungeons = Config.Bind("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListRepairPiece = Config.Bind("List - Global setting", "Can be repaired", defaultValue: "", "Comma separated list of pieces that will be repairable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListCanBeRemoved = Config.Bind("List - Global setting", "Can be removed", defaultValue: "", "Comma separated list of pieces that will be removeable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAllowedInDungeons = Config.Bind("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListRepairPiece = Config.Bind("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListCanBeRemoved = Config.Bind("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
 
-            prefabListAshDamageImmune = Config.Bind("List - Immune to", "Ash and lava", defaultValue: "", "Comma separated list of pieces that will be immune to ash and lava damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoRoofWear = Config.Bind("List - Immune to", "Water damage", defaultValue: "", "Comma separated list of pieces that will be immune to water damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoSupportWear = Config.Bind("List - Immune to", "Structural integrity", defaultValue: "", "Comma separated list of pieces that will not be needed support. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAshDamageImmune = Config.Bind("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoRoofWear = Config.Bind("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoSupportWear = Config.Bind("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+
+            foreach (WearNTear.MaterialType materialType in Enum.GetValues(typeof(WearNTear.MaterialType)))
+            {
+                materialConfigs.Add(materialType, new MaterialPropertiesConfig()
+                {
+                    maxSupport = Config.Bind($"Material - {materialType}", "Max support multiplier", defaultValue: 1f, "Multiplier of maximum support value material can provide."),
+                    minSupport = Config.Bind($"Material - {materialType}", "Min support multiplier", defaultValue: 1f, "Multiplier of minimum support value material can provide."),
+                    verticalLoss = Config.Bind($"Material - {materialType}", "Vertical stability multiplier", defaultValue: 1f, "Multiplier of vertical support value. Increase to be able to build higher."),
+                    horizontalLoss = Config.Bind($"Material - {materialType}", "Horizontal stability multiplier", defaultValue: 1f, "Multiplier of horizontal support value. Increase to be able to build longer hanging beams.")
+                });
+            }
 
             InitCommands();
         }
@@ -231,6 +252,23 @@ namespace BuildPiecesCustomized
             Piece.s_allPieces.Do(piece => PatchPiece(piece));
         }
 
+        private static void FillCraftingStations()
+        {
+            craftingStations.Clear();
+            foreach (Recipe recipe in ObjectDB.instance.m_recipes)
+            {
+                if (recipe?.m_craftingStation == null)
+                    continue;
+
+                if (craftingStations.ContainsKey(recipe.m_craftingStation.name))
+                    continue;
+
+                craftingStations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
+                craftingStations[recipe.m_craftingStation.m_name] = recipe.m_craftingStation;
+                craftingStations[recipe.m_craftingStation.m_name.Substring(1)] = recipe.m_craftingStation;
+            }
+        }
+
         private static void PatchPiece(Piece piece)
         {
             if (piece == null) 
@@ -307,20 +345,21 @@ namespace BuildPiecesCustomized
             }
         }
 
-        private static void FillCraftingStations()
+        [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.GetMaterialProperties))]
+        private static class WearNTear_GetMaterialProperties_MaterialProperties
         {
-            craftingStations.Clear();
-            foreach (Recipe recipe in ObjectDB.instance.m_recipes)
+            private static void Postfix(WearNTear __instance, ref float maxSupport, ref float minSupport, ref float horizontalLoss, ref float verticalLoss)
             {
-                if (recipe?.m_craftingStation == null)
-                    continue;
+                if (!modEnabled.Value)
+                    return;
 
-                if (craftingStations.ContainsKey(recipe.m_craftingStation.name))
-                    continue;
+                if (!materialConfigs.ContainsKey(__instance.m_materialType))
+                    return;
 
-                craftingStations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
-                craftingStations[recipe.m_craftingStation.m_name] = recipe.m_craftingStation;
-                craftingStations[recipe.m_craftingStation.m_name.Substring(1)] = recipe.m_craftingStation;
+                maxSupport *= materialConfigs[__instance.m_materialType].maxSupport.Value;
+                minSupport *= materialConfigs[__instance.m_materialType].minSupport.Value;
+                horizontalLoss /= materialConfigs[__instance.m_materialType].horizontalLoss.Value;
+                verticalLoss /= materialConfigs[__instance.m_materialType].verticalLoss.Value;
             }
         }
     }
