@@ -13,6 +13,7 @@ namespace BuildPiecesCustomized
     {
         public string name;
 
+        public bool enabled = true;
         public Piece.PieceCategory category;
         public Piece.ComfortGroup comfortGroup;
         public int comfort;
@@ -66,6 +67,7 @@ namespace BuildPiecesCustomized
 
         internal void PatchPiece(Piece piece)
         {
+            piece.m_enabled = enabled;
             piece.m_category = category;
             piece.m_comfort = comfort;
             piece.m_comfortGroup = comfortGroup;
@@ -179,7 +181,6 @@ namespace BuildPiecesCustomized
                             break;
                     }
                 }
-
             }
         }
 
@@ -198,6 +199,7 @@ namespace BuildPiecesCustomized
         internal CustomPieceData(Piece piece)
         {
             name = piece.gameObject.name;
+            enabled = piece.m_enabled;
             category = piece.m_category;
             comfortGroup = piece.m_comfortGroup;
             comfort = piece.m_comfort;
@@ -264,7 +266,6 @@ namespace BuildPiecesCustomized
                     Enum.GetName(typeof(HitData.DamageType), HitData.DamageType.Poison) + ":" + Enum.GetName(typeof(HitData.DamageModifier), wnt.m_damages.m_poison),
                     Enum.GetName(typeof(HitData.DamageType), HitData.DamageType.Spirit) + ":" + Enum.GetName(typeof(HitData.DamageModifier), wnt.m_damages.m_spirit)
                 };
-
             }
         }
 
