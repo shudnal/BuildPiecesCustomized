@@ -15,7 +15,15 @@ namespace BuildPiecesCustomized
 
         internal static void GenerateDocumentationFile()
         {
-            File.WriteAllText(Path.Combine(pluginDirectory.FullName, filename), GetFileText());
+            string file = Path.Combine(pluginDirectory.FullName, filename);
+            try
+            {
+                File.WriteAllText(file, GetFileText());
+            }
+            catch (Exception e)
+            {
+                LogWarning($"Error when writing file ({file})! Error: {e.Message}");
+            }
         }
 
         private static string GetFileText()
@@ -53,13 +61,30 @@ namespace BuildPiecesCustomized
             sb.AppendLine("### modifier");
             EnumToList(typeof(HitData.DamageModifier), noID: true);
 
-            sb.AppendLine();
-            sb.AppendLine("# Piece prefab names");
-            sb.AppendLine("Format \"Prefab name - Token - Localized name\"");
-            sb.AppendLine("List given in order as it appears in the game");
-
             if ((bool)ObjectDB.instance)
             {
+                sb.AppendLine();
+                sb.AppendLine("## station");
+
+                Dictionary<string, CraftingStation> stations = new Dictionary<string, CraftingStation>();
+                foreach (Recipe recipe in ObjectDB.instance.m_recipes)
+                {
+                    if (recipe?.m_craftingStation == null)
+                        continue;
+
+                    stations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
+                }
+
+                foreach (KeyValuePair<string, CraftingStation> station in stations)
+                {
+                    sb.AppendLine($"* {station.Key} - {Localization.instance.Localize(station.Value.m_name)}");
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("# Piece prefab names");
+                sb.AppendLine("Format \"Prefab name - Token - Localized name\"");
+                sb.AppendLine("List given in order as it appears in the game");
+
                 foreach (ItemDrop tool in ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Tool, ""))
                 {
                     if (tool.m_itemData.m_shared.m_buildPieces?.m_pieces?.Count == 0)
@@ -95,7 +120,7 @@ namespace BuildPiecesCustomized
                 if (!modEnabled.Value)
                     return;
 
-                DocGen.GenerateDocumentationFile();
+                GenerateDocumentationFile();
             }
         }
 
@@ -108,7 +133,7 @@ namespace BuildPiecesCustomized
                 if (!modEnabled.Value)
                     return;
 
-                DocGen.GenerateDocumentationFile();
+                GenerateDocumentationFile();
             }
         }
     }

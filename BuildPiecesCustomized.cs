@@ -8,6 +8,7 @@ using HarmonyLib;
 using ServerSync;
 using UnityEngine;
 using System.Linq;
+using System.Collections;
 
 namespace BuildPiecesCustomized
 {
@@ -47,6 +48,7 @@ namespace BuildPiecesCustomized
 
         internal static readonly Dictionary<string, CustomPieceData> pieceData = new Dictionary<string, CustomPieceData>();
         internal static readonly Dictionary<string, CraftingStation> craftingStations = new Dictionary<string, CraftingStation>();
+        internal static readonly Dictionary<string, CustomPieceData> defaultPieceData = new Dictionary<string, CustomPieceData>();
 
         internal static DirectoryInfo pluginDirectory;
         internal static DirectoryInfo configDirectory;
@@ -96,8 +98,7 @@ namespace BuildPiecesCustomized
         }
         public static void LogWarning(object data)
         {
-            if (loggingEnabled.Value)
-                instance.Logger.LogWarning(data);
+            instance.Logger.LogWarning(data);
         }
 
         public void ConfigInit()
@@ -108,7 +109,7 @@ namespace BuildPiecesCustomized
             configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
             loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Not Synced with Server]", false);
 
-            toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe", "Comma-separated list of tool prefab name to get build pieces from");
+            toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe,Cultivator", "Comma-separated list of tool prefab name to get build pieces from");
 
             prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
             prefabListAllowedInDungeons = Config.Bind("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
@@ -252,7 +253,11 @@ namespace BuildPiecesCustomized
                 }
             }
 
-            Piece.s_allPieces.Do(piece => PatchPiece(piece));
+            instance.StartCoroutine(PatchPieces());
+
+            Piece.s_allPieces?.Do(piece => PatchPiece(piece));
+
+            Player.m_localPlayer?.UpdateAvailablePiecesList();
         }
 
         private static void FillCraftingStations()
@@ -278,6 +283,11 @@ namespace BuildPiecesCustomized
                 return;
 
             string name = Utils.GetPrefabName(piece.gameObject);
+            if (!defaultPieceData.ContainsKey(name))
+                defaultPieceData[name] = new CustomPieceData(piece);
+
+            defaultPieceData[name].PatchPiece(piece);
+
             if (pieceData.ContainsKey(name))
             {
                 LogInfo($"Patching {name}");
@@ -309,14 +319,13 @@ namespace BuildPiecesCustomized
             }
         }
 
-        private static void PatchPieces()
+        private static IEnumerator PatchPieces()
         {
-            if (!(bool)ObjectDB.instance)
-                return;
-
-            SetupConfigWatcher();
+            yield return new WaitUntil(() => ObjectDB.instance != null);
 
             FillCraftingStations();
+
+            yield return new WaitForFixedUpdate();
 
             foreach (GameObject go in CustomPieceData.GetBuildPieces())
                 if (go.TryGetComponent(out Piece piece))
@@ -332,7 +341,7 @@ namespace BuildPiecesCustomized
                 if (!modEnabled.Value)
                     return;
 
-                PatchPieces();
+                SetupConfigWatcher();
             }
         }
 

@@ -20,8 +20,6 @@ namespace BuildPiecesCustomized
         public Piece.PieceCategory category;
         public Piece.ComfortGroup comfortGroup;
         public int comfort;
-        public bool groundPiece;
-        public bool allowAltGroundPlacement;
         public bool groundOnly;
         public bool cultivatedGroundOnly;
         public bool waterPiece;
@@ -54,7 +52,6 @@ namespace BuildPiecesCustomized
         public bool noSupportWear = true;
         public WearNTear.MaterialType materialType;
         public bool supports;
-        public Vector3 comOffset = Vector3.zero;
         public float hitNoise;
         public float destroyNoise;
         public bool autoCreateFragments = true;
@@ -78,8 +75,6 @@ namespace BuildPiecesCustomized
             piece.m_category = category;
             piece.m_comfort = comfort;
             piece.m_comfortGroup = comfortGroup;
-            piece.m_groundPiece = groundPiece;
-            piece.m_allowAltGroundPlacement = allowAltGroundPlacement;
             piece.m_groundOnly = groundOnly;
             piece.m_cultivatedGroundOnly = cultivatedGroundOnly;
             piece.m_waterPiece = waterPiece;
@@ -135,7 +130,6 @@ namespace BuildPiecesCustomized
                 wnt.m_noSupportWear = noSupportWear;
                 wnt.m_materialType = materialType;
                 wnt.m_supports = supports;
-                wnt.m_comOffset = comOffset;
                 wnt.m_hitNoise = hitNoise;
                 wnt.m_destroyNoise = destroyNoise;
                 wnt.m_autoCreateFragments = autoCreateFragments;
@@ -212,8 +206,6 @@ namespace BuildPiecesCustomized
             category = piece.m_category;
             comfortGroup = piece.m_comfortGroup;
             comfort = piece.m_comfort;
-            groundPiece = piece.m_groundPiece;
-            allowAltGroundPlacement = piece.m_allowAltGroundPlacement;
             groundOnly = piece.m_groundOnly;
             cultivatedGroundOnly = piece.m_cultivatedGroundOnly;
             waterPiece = piece.m_waterPiece;
@@ -251,7 +243,6 @@ namespace BuildPiecesCustomized
                 noSupportWear = wnt.m_noSupportWear;
                 materialType = wnt.m_materialType;
                 supports = wnt.m_supports;
-                comOffset = wnt.m_comOffset;
                 hitNoise = wnt.m_hitNoise;
                 destroyNoise = wnt.m_destroyNoise;
                 autoCreateFragments = wnt.m_autoCreateFragments;
