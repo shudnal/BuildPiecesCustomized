@@ -47,9 +47,9 @@ namespace BuildPiecesCustomized
 
         internal static readonly Dictionary<string, CustomPieceData> pieceData = new Dictionary<string, CustomPieceData>();
         internal static readonly Dictionary<string, CraftingStation> craftingStations = new Dictionary<string, CraftingStation>();
-        
-        private static DirectoryInfo pluginDirectory;
-        private static DirectoryInfo configDirectory;
+
+        internal static DirectoryInfo pluginDirectory;
+        internal static DirectoryInfo configDirectory;
 
         private static FileSystemWatcher fileSystemWatcherPlugin;
         private static FileSystemWatcher fileSystemWatcherConfig;
@@ -162,6 +162,9 @@ namespace BuildPiecesCustomized
                     }
                 }
             }, isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
+
+            new Terminal.ConsoleCommand("bpcdocs", $"Save documentation file {DocGen.filename} next to mod", (Terminal.ConsoleEventArgs args) => DocGen.GenerateDocumentationFile()
+            , isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
         }
 
         public static void SetupConfigWatcher()

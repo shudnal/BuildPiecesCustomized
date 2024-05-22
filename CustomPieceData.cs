@@ -11,7 +11,10 @@ namespace BuildPiecesCustomized
     [Serializable]
     internal class CustomPieceData
     {
+        public string prefabName;
+
         public string name;
+        public string description;
 
         public bool enabled = true;
         public Piece.PieceCategory category;
@@ -68,6 +71,10 @@ namespace BuildPiecesCustomized
         internal void PatchPiece(Piece piece)
         {
             piece.m_enabled = enabled;
+
+            piece.m_name = name;
+            piece.m_description = description;
+
             piece.m_category = category;
             piece.m_comfort = comfort;
             piece.m_comfortGroup = comfortGroup;
@@ -186,7 +193,7 @@ namespace BuildPiecesCustomized
 
         internal void SaveToDirectory(string directory)
         {
-            string filename = Path.Combine(directory, $"{name}.json");
+            string filename = Path.Combine(directory, $"{prefabName}.json");
 
             File.WriteAllText(filename, JsonUtility.ToJson(this, true));
         }
@@ -198,8 +205,10 @@ namespace BuildPiecesCustomized
 
         internal CustomPieceData(Piece piece)
         {
-            name = piece.gameObject.name;
+            prefabName = piece.gameObject.name;
             enabled = piece.m_enabled;
+            name = piece.m_name;
+            description = piece.m_description;
             category = piece.m_category;
             comfortGroup = piece.m_comfortGroup;
             comfort = piece.m_comfort;
