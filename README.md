@@ -69,26 +69,37 @@ If you want to undo changes delete the file and restart the game.
 ## Properties meaning
 
 Most properties are self-explanatory but some may need some more explanation.
-* notOnFloor - surface should be vertical
-* inCeilingOnly - object should hang from the ceiling
-* onlyInTeleportArea - object should be placed near object emitting Teleport effect area (currently there are no such pieces)
+* groundOnly - if true - piece could only be built on the ground (like vanilla fireplace)
+* cultivatedGroundOnly - if true piece could only be built on terrain which was cultivated 
+* waterPiece - if true - piece should touch the water on built
+* clipGround - if true -  piece can clip into terrain
+* clipEverything - if true - piece can clip into any object
+* noInWater - if true - piece should not touch the water when built
+* notOnWood - if true - piece should not touch wood or hardwood surface
+* notOnTiltingSurface - if true - piece should be placed on rather flat surface
+* notOnFloor - if true - surface should be vertical
+* noClipping - if true - piece should not clip anything
+* inCeilingOnly - if true - object should hang from the ceiling
+* onlyInTeleportArea - if true - object should be placed near object emitting Teleport effect area (currently there are no such pieces)
+* allowedInDungeons - if true - object could be placed in dungeons (interior)
 * spaceRequirement - minimum distance to next station extension object
-* allowRotatedOverlap - piece could clip into other pieces when rotated
-* vegetationGroundOnly - vegetable should be placed on the cultivated ground
+* allowRotatedOverlap - if true - piece could clip into other pieces when rotated
+* vegetationGroundOnly - if true - vegetable should be placed on the cultivated ground
 * blockRadius - piece could not be placed if there are another similar piece in that radius (like Sap collector)
 * extraPlacementDistance - additional distance to object when placing (currently only Drakkar from Ashlands)
-* targetNonPlayerBuilt - should enemies be attacking that object if it wasn't built by players (bonfire piece had it false and Fulings doesn't attack their own bonfires)
-* primaryTarget - monsters will attack that object firstly
-* randomTarget - should be attacked by monsters (if disabled then object will be ignored as a target but still could take AoE damage)
+* targetNonPlayerBuilt - if true enemies will attack that object if it wasn't built by players (bonfire piece had it set to false and Fulings doesn't attack their own bonfires)
+* primaryTarget - if true - monsters will attack that object firstly
+* randomTarget - if true - piece could be targeted by monsters (if disabled then object will be ignored as a target but still could take AoE damage)
+* onlyInBiome - i.e. if you want piece to be placed in several biomes and lets say it's meadows (1), black forest(8), and plains(16) you just need to add that code numbers like 1+8+16 = 25. Then you set "onlyInBiome: 25".
 
-* noRoofWear - water and rain immunity
-* noSupportWear - piece will not be affected by structural integrity check
-* supports - piece will be able to support another pieces built on top
+* noRoofWear - water and rain immunity (if set to true, piece will take water damage, if set to false it will not take rain or water damage)
+* noSupportWear - piece will not be affected by structural integrity check (if set to false it will not break due to insufficient structural support)
+* supports - if true - piece will be able to support another pieces built on top. if false then you can't build anything touching only that piece
 * hitNoise - how much noise will be generated on hit (how far you will be heard by enemies)
 * destroyNoise - how much noise will be generated on destroy (how far you will be heard by enemies)
-* ashDamageImmune - piece will not be affected by ash and lava damage
+* ashDamageImmune - if true - piece will not be affected by ash and lava damage
 * ashDamageResist - piece will take only 33% of lava damage and will not catch fire in Ashlands
-* triggerPrivateArea - if enabled then ward will flash when object is attacked (if player attack that piece next to NPCs they will become aggravated)
+* triggerPrivateArea - if enabled - ward will flash when object is attacked (if player attack that piece next to NPCs they will become aggravated)
 
 ## Installation (manual)
 copy BuildPiecesCustomized.dll to your BepInEx\Plugins\ folder.
