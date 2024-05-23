@@ -19,7 +19,7 @@ namespace BuildPiecesCustomized
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.0";
+        const string pluginVersion = "1.0.1";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
