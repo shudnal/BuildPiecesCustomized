@@ -15,6 +15,8 @@ namespace BuildPiecesCustomized
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     [BepInIncompatibility("aedenthorn.BuildPieceTweaks")]
     [BepInIncompatibility("TheSxW_EditMaterialProperties")]
+    [BepInIncompatibility("lime.plugins.foreverbuild")]
+    [BepInIncompatibility("bonesbro.val.floorsareroofs")]
     internal class BuildPiecesCustomized : BaseUnityPlugin
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
