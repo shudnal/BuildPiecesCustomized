@@ -21,7 +21,7 @@ namespace BuildPiecesCustomized
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.1";
+        const string pluginVersion = "1.0.2";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -214,7 +214,7 @@ namespace BuildPiecesCustomized
             FileInfo[] configFiles = pluginDirectory.GetFiles("*.json", SearchOption.AllDirectories);
 
             if (configDirectory.Exists)
-                configFiles.AddRangeToArray(configDirectory.GetFiles("*.json", SearchOption.AllDirectories));
+                configFiles = configFiles.AddRangeToArray(configDirectory.GetFiles("*.json", SearchOption.AllDirectories));
 
             foreach (FileInfo file in configFiles)
             {
