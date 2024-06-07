@@ -21,7 +21,7 @@ namespace BuildPiecesCustomized
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.4";
+        const string pluginVersion = "1.0.5";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -255,7 +255,8 @@ namespace BuildPiecesCustomized
                 }
             }
 
-            instance.StartCoroutine(PatchPieces());
+            if (ZNetScene.instance)
+                instance.StartCoroutine(PatchPieces());
 
             Piece.s_allPieces?.Do(piece => PatchPiece(piece));
 
@@ -281,7 +282,7 @@ namespace BuildPiecesCustomized
 
         private static void PatchPiece(Piece piece)
         {
-            if (piece == null) 
+            if (piece == null || !ZNetScene.instance)
                 return;
 
             string name = Utils.GetPrefabName(piece.gameObject);
@@ -340,7 +341,7 @@ namespace BuildPiecesCustomized
             yield return new WaitForFixedUpdate();
 
             foreach (GameObject go in CustomPieceData.GetBuildPieces())
-                if (go.TryGetComponent(out Piece piece))
+                if (go != null && go.TryGetComponent(out Piece piece))
                     PatchPiece(piece);
         }
 
