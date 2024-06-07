@@ -36,7 +36,7 @@ This values are multipliers of vanilla numbers and 1.0 means vanilla properties.
 
 ## Automatically generated documentation
 
-When you open main menu or login into your world the file "Pieces and properties.md" will be generated and placed next to your mod dll.
+When you open main menu or login into your world the file "Pieces and properties.md" will be generated and placed in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
 
 That file contains all pieces from your current game and identifiers used to configure pieces.
 
@@ -48,7 +48,7 @@ That file could be regenerated manually at any time using "bpcdocs" console comm
 
 At first you need to generate template file with prefab name and current properties.
 
-Use console command "bpcsave [prefab name]" and it will create JSON file with prefab name next to mod's dll.
+Use console command "bpcsave [prefab name]" and it will create JSON file with prefab name in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
 
 If you trying to save file for already altered piece you should do it from main menu because in game it will be patched and will save its altered state.
 
@@ -111,7 +111,6 @@ Mod is incompatible with deprecated or outdated mods with similar purpose.
 * Custom Building Material Proterties - edit material properties configs
 * Forever Build - edit either material properties or "Structural integrity" global list or noSupportWear value of individual piece
 * Build Piece Tweaks - similar purpose non updated for new Ashlands related properties
-* Infinity Hammer - similar nature of piece changes and unpredictable outcome as a result
 
 Everything mods from the list can do this mod can also do.
 

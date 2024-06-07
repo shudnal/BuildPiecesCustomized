@@ -17,12 +17,11 @@ namespace BuildPiecesCustomized
     [BepInIncompatibility("TheSxW_EditMaterialProperties")]
     [BepInIncompatibility("lime.plugins.foreverbuild")]
     [BepInIncompatibility("bonesbro.val.floorsareroofs")]
-    [BepInIncompatibility("infinity_hammer")]
     internal class BuildPiecesCustomized : BaseUnityPlugin
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.3";
+        const string pluginVersion = "1.0.4";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -161,13 +160,13 @@ namespace BuildPiecesCustomized
                         args.Context?.AddString($"Piece with name {prefabName} was not found");
                     else
                     {
-                        pieceData.SaveToDirectory(pluginDirectory.FullName);
-                        args.Context?.AddString($"Saved {prefabName} file to plugin directory");
+                        pieceData.SaveToDirectory(configDirectory.FullName);
+                        args.Context?.AddString($"Saved {prefabName} file to config directory");
                     }
                 }
             }, isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
 
-            new Terminal.ConsoleCommand("bpcdocs", $"Save documentation file {DocGen.filename} next to mod", (Terminal.ConsoleEventArgs args) => DocGen.GenerateDocumentationFile()
+            new Terminal.ConsoleCommand("bpcdocs", $"Save documentation file {DocGen.filename} to config directory", (Terminal.ConsoleEventArgs args) => DocGen.GenerateDocumentationFile()
             , isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
         }
 
@@ -287,7 +286,14 @@ namespace BuildPiecesCustomized
 
             string name = Utils.GetPrefabName(piece.gameObject);
             if (!defaultPieceData.ContainsKey(name))
-                defaultPieceData[name] = new CustomPieceData(piece);
+            {
+                GameObject prefab = ZNetScene.instance.GetPrefab(name);
+
+                if (prefab == null || !prefab.TryGetComponent(out Piece defaultPiece))
+                    return;
+
+                defaultPieceData[name] = new CustomPieceData(defaultPiece);
+            }
 
             defaultPieceData[name].PatchPiece(piece);
 
@@ -320,6 +326,9 @@ namespace BuildPiecesCustomized
                 if (prefabListNoSupportWear.Value.Contains(allPiecesIdentifier) || prefabListNoSupportWear.Value.IndexOf(name) != -1)
                     wnt.m_noSupportWear = false;
             }
+
+            if (piece.m_nview != null && piece.m_nview.IsValid())
+                piece.m_nview.LoadFields();
         }
 
         private static IEnumerator PatchPieces()

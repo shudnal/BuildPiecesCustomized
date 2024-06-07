@@ -15,9 +15,10 @@ namespace BuildPiecesCustomized
 
         internal static void GenerateDocumentationFile()
         {
-            string file = Path.Combine(pluginDirectory.FullName, filename);
+            string file = Path.Combine(configDirectory.FullName, filename);
             try
             {
+                Directory.CreateDirectory(configDirectory.FullName);
                 File.WriteAllText(file, GetFileText());
             }
             catch (Exception e)

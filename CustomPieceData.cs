@@ -187,6 +187,8 @@ namespace BuildPiecesCustomized
 
         internal void SaveToDirectory(string directory)
         {
+            Directory.CreateDirectory(directory);
+
             string filename = Path.Combine(directory, $"{prefabName}.json");
 
             File.WriteAllText(filename, JsonUtility.ToJson(this, true));

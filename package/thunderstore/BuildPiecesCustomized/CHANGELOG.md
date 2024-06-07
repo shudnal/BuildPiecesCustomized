@@ -1,3 +1,7 @@
+# 1.0.4
+* proper compatibility with Infinity Hammer
+* "bpcsave" command now save json file into \BepInEx\config\shudnal.BuildPiecesCustomized folder
+
 # 1.0.3
 * incompatibility with Infinity Hammer
 
