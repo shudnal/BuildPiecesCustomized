@@ -1,3 +1,6 @@
+# 1.0.3
+* incompatibility with Infinity Hammer
+
 # 1.0.2
 * loading files from config directory fixed
 

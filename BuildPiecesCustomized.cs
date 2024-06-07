@@ -17,11 +17,12 @@ namespace BuildPiecesCustomized
     [BepInIncompatibility("TheSxW_EditMaterialProperties")]
     [BepInIncompatibility("lime.plugins.foreverbuild")]
     [BepInIncompatibility("bonesbro.val.floorsareroofs")]
+    [BepInIncompatibility("infinity_hammer")]
     internal class BuildPiecesCustomized : BaseUnityPlugin
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.2";
+        const string pluginVersion = "1.0.3";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 

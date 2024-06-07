@@ -111,6 +111,7 @@ Mod is incompatible with deprecated or outdated mods with similar purpose.
 * Custom Building Material Proterties - edit material properties configs
 * Forever Build - edit either material properties or "Structural integrity" global list or noSupportWear value of individual piece
 * Build Piece Tweaks - similar purpose non updated for new Ashlands related properties
+* Infinity Hammer - similar nature of piece changes and unpredictable outcome as a result
 
 Everything mods from the list can do this mod can also do.
 
