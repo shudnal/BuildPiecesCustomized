@@ -1,3 +1,6 @@
+# 1.0.6
+* all config values made server synced
+
 # 1.0.5
 * NullReferenceException fixed
 

@@ -21,7 +21,7 @@ namespace BuildPiecesCustomized
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.5";
+        const string pluginVersion = "1.0.6";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -114,22 +114,22 @@ namespace BuildPiecesCustomized
             toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe,Cultivator", "Comma-separated list of tool prefab name to get build pieces from");
 
             prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListAllowedInDungeons = Config.Bind("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListRepairPiece = Config.Bind("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListCanBeRemoved = Config.Bind("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
 
-            prefabListAshDamageImmune = Config.Bind("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoRoofWear = Config.Bind("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoSupportWear = Config.Bind("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
 
             foreach (WearNTear.MaterialType materialType in Enum.GetValues(typeof(WearNTear.MaterialType)))
             {
                 materialConfigs.Add(materialType, new MaterialPropertiesConfig()
                 {
-                    maxSupport = Config.Bind($"Material - {materialType}", "Max support multiplier", defaultValue: 1f, "Multiplier of maximum support value material can provide."),
-                    minSupport = Config.Bind($"Material - {materialType}", "Min support multiplier", defaultValue: 1f, "Multiplier of minimum support value material can provide."),
-                    verticalLoss = Config.Bind($"Material - {materialType}", "Vertical stability multiplier", defaultValue: 1f, "Multiplier of vertical support value. Increase to be able to build higher."),
-                    horizontalLoss = Config.Bind($"Material - {materialType}", "Horizontal stability multiplier", defaultValue: 1f, "Multiplier of horizontal support value. Increase to be able to build longer hanging beams.")
+                    maxSupport = config($"Material - {materialType}", "Max support multiplier", defaultValue: 1f, "Multiplier of maximum support value material can provide."),
+                    minSupport = config($"Material - {materialType}", "Min support multiplier", defaultValue: 1f, "Multiplier of minimum support value material can provide."),
+                    verticalLoss = config($"Material - {materialType}", "Vertical stability multiplier", defaultValue: 1f, "Multiplier of vertical support value. Increase to be able to build higher."),
+                    horizontalLoss = config($"Material - {materialType}", "Horizontal stability multiplier", defaultValue: 1f, "Multiplier of horizontal support value. Increase to be able to build longer hanging beams.")
                 });
             }
 
