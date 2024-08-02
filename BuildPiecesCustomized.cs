@@ -150,6 +150,17 @@ namespace BuildPiecesCustomized
 
         public static void InitCommands()
         {
+            new Terminal.ConsoleCommand("bpcsaveall", "[Prefab name] - save data of ALL pieces into JSON files next to mod", delegate (Terminal.ConsoleEventArgs args)
+            {
+                foreach (GameObject piece in CustomPieceData.GetBuildPieces()){
+                    CustomPieceData pieceData = CustomPieceData.GetByPieceName(piece.name);
+                    if (pieceData != null)
+                        pieceData.SaveToDirectory(configDirectory.FullName);
+                        args.Context?.AddString($"Saved {prefabName} file to config directory");
+                    }
+                }
+            }, isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, remoteCommand: false);
+
             new Terminal.ConsoleCommand("bpcsave", "[Prefab name] - save piece data into JSON file next to mod", delegate (Terminal.ConsoleEventArgs args)
             {
                 if (args.Length >= 2)
