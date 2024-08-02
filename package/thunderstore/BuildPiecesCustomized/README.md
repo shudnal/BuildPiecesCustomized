@@ -36,31 +36,33 @@ This values are multipliers of vanilla numbers and 1.0 means vanilla properties.
 
 ## Automatically generated documentation
 
-When you open main menu or login into your world the file "Pieces and properties.md" will be generated and placed in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
+When you open main menu or login into your world the file `Pieces and properties.md` will be generated and placed in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
 
 That file contains all pieces from your current game and identifiers used to configure pieces.
 
 Use it to find exact prefab name of piece to start customizing.
 
-That file could be regenerated manually at any time using "bpcdocs" console command.
+That file could be regenerated manually at any time using `bpcdocs` console command.
 
 ## Setting individual values
 
 At first you need to generate template file with prefab name and current properties.
 
-Use console command "bpcsave [prefab name]" and it will create JSON file with prefab name in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
+Use console command `bpcsave [prefab name]` and it will create JSON file with prefab name in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder.
+
+Or use console command `bpcsaveall [prefab partial name or wildcard *]` and if prefab name matches it will create several JSON files with prefab names in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder.
 
 If you trying to save file for already altered piece you should do it from main menu because in game it will be patched and will save its altered state.
 
 You can change properties in that file as you want and then save it.
 
-After editing you can move that file in any subfolder in mods directory. You can also place this files in "\BepInEx\config\shudnal.BuildPiecesCustomized" directory (first you need to create it manually). Or you can leave it next to mod dll.
+After editing you can move that file in any subfolder in mods directory. You can also place this files in `\BepInEx\config\shudnal.BuildPiecesCustomized` directory (first you need to create it manually). Or you can leave it next to mod dll.
 
-All *.json files from all subdirectories in "\BepInEx\config\shudnal.BuildPiecesCustomized" folder and plugin folder will be loaded on the world login.
+All *.json files from all subdirectories in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder and plugin folder will be loaded on the world login.
 
 On every file loading there will be line in log like this
 
-[Info   :Build Pieces Customized] Found \BepInEx\plugins\shudnal-BuildPiecesCustomized\portal_wood.json
+`[Info   :Build Pieces Customized] Found \BepInEx\plugins\shudnal-BuildPiecesCustomized\portal_wood.json`
 
 If you place that files on the server then its settings will be shared from the server.
 

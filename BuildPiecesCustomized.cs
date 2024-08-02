@@ -9,6 +9,7 @@ using ServerSync;
 using UnityEngine;
 using System.Linq;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace BuildPiecesCustomized
 {
@@ -21,7 +22,7 @@ namespace BuildPiecesCustomized
     {
         const string pluginID = "shudnal.BuildPiecesCustomized";
         const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.6";
+        const string pluginVersion = "1.0.7";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -150,18 +151,23 @@ namespace BuildPiecesCustomized
 
         public static void InitCommands()
         {
-            new Terminal.ConsoleCommand("bpcsaveall", "[Prefab name] - save data of ALL pieces into JSON files next to mod", delegate (Terminal.ConsoleEventArgs args)
+            new Terminal.ConsoleCommand("bpcsaveall", $"[Prefab partial name or wildcard *] - save data of ALL pieces into JSON files to config directory {configDirectory.Name}", delegate (Terminal.ConsoleEventArgs args)
             {
-                foreach (GameObject piece in CustomPieceData.GetBuildPieces()){
+                bool filterPieces = args.Length >= 2;
+                string prefabNameFilter = filterPieces ? args.FullLine.Substring(args[0].Length + 1) : "";
+
+                foreach (GameObject piece in CustomPieceData.GetBuildPieces())
+                {
                     CustomPieceData pieceData = CustomPieceData.GetByPieceName(piece.name);
-                    if (pieceData != null)
+                    if (pieceData != null && (!filterPieces || pieceData.prefabName.IndexOf(prefabNameFilter) != -1 || Regex.IsMatch(pieceData.prefabName, WildCardToRegular(prefabNameFilter))))
+                    {
                         pieceData.SaveToDirectory(configDirectory.FullName);
-                        args.Context?.AddString($"Saved {prefabName} file to config directory");
+                        args.Context?.AddString($"Saved {pieceData.prefabName} file to config directory");
                     }
                 }
-            }, isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, remoteCommand: false);
+            }, optionsFetcher: () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList());
 
-            new Terminal.ConsoleCommand("bpcsave", "[Prefab name] - save piece data into JSON file next to mod", delegate (Terminal.ConsoleEventArgs args)
+            new Terminal.ConsoleCommand("bpcsave", $"[Prefab name] - save piece data into JSON file to config directory {configDirectory.Name}", delegate (Terminal.ConsoleEventArgs args)
             {
                 if (args.Length >= 2)
                 {
@@ -175,10 +181,14 @@ namespace BuildPiecesCustomized
                         args.Context?.AddString($"Saved {prefabName} file to config directory");
                     }
                 }
-            }, isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
+            }, optionsFetcher:() => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList());
 
-            new Terminal.ConsoleCommand("bpcdocs", $"Save documentation file {DocGen.filename} to config directory", (Terminal.ConsoleEventArgs args) => DocGen.GenerateDocumentationFile()
-            , isCheat: false, isNetwork: false, onlyServer: false, isSecret: false, allowInDevBuild: false, () => CustomPieceData.GetBuildPieces().Select(piece => piece.name).ToList(), alwaysRefreshTabOptions: true, remoteCommand: false);
+            new Terminal.ConsoleCommand("bpcdocs", $"Save documentation file {DocGen.filename} to config directory", (Terminal.ConsoleEventArgs args) => DocGen.GenerateDocumentationFile());
+
+            string WildCardToRegular(string value)
+            {
+                return "^" + Regex.Escape(value).Replace("\\*", ".*") + "$";
+            }
         }
 
         public static void SetupConfigWatcher()

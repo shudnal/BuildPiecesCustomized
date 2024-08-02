@@ -1,3 +1,6 @@
+# 1.0.7
+* bpcsaveall command to save several pieces JSON at once
+
 # 1.0.6
 * all config values made server synced
 
