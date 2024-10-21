@@ -7,7 +7,7 @@ This mod allows you to customize most properties individually and some propertie
 * customize properties of individual pieces (you can also disable it, rename or set description)
 * set some most useful properties globally
 * change material properties to be able to build higher and wider
-* all configs are server-synced and will be reapplied on file change
+* all configs are server-synced and will be reapplied on file or config change
 
 ## Setting global values
 
@@ -19,6 +19,7 @@ There are several global lists set in config values:
 * Ash and lava immunity
 * Water and rain damage immunity
 * Structural integrity
+* Is roof
 
 All lists are comma-separated lists of prefab names. If prefab name is set in some list this value will override individual settings.
 

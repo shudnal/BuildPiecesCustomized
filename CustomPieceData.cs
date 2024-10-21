@@ -123,7 +123,8 @@ namespace BuildPiecesCustomized
 
             piece.m_resources = m_resources.ToArray();
 
-            if (piece.TryGetComponent(out WearNTear wnt))
+            WearNTear wnt = GetWearNTearComponent(piece);
+            if (wnt != null)
             {
                 wnt.m_health = health;
                 wnt.m_noRoofWear = noRoofWear;
@@ -238,7 +239,8 @@ namespace BuildPiecesCustomized
 
             resources.AddRange(piece.m_resources.Select(req => { return $"{req.m_resItem.name}:{req.m_amount}:{req.m_recover}"; }));
 
-            if (piece.TryGetComponent(out WearNTear wnt))
+            WearNTear wnt = GetWearNTearComponent(piece);
+            if (wnt != null)
             {
                 health = wnt.m_health;
                 noRoofWear = wnt.m_noRoofWear;
@@ -290,7 +292,7 @@ namespace BuildPiecesCustomized
         {
             List<GameObject> pieces = new List<GameObject>();
 
-            HashSet<string> toolList = new HashSet<string>(toolsToPatchPieces.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(c => { return c.Trim(); }));
+            HashSet<string> toolList = new HashSet<string>(toolsToPatchPieces.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(c => c.Trim()));
 
             foreach (string toolName in toolList)
             {

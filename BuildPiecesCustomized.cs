@@ -8,7 +8,6 @@ using HarmonyLib;
 using ServerSync;
 using UnityEngine;
 using System.Linq;
-using System.Collections;
 using System.Text.RegularExpressions;
 
 namespace BuildPiecesCustomized
@@ -18,11 +17,11 @@ namespace BuildPiecesCustomized
     [BepInIncompatibility("TheSxW_EditMaterialProperties")]
     [BepInIncompatibility("lime.plugins.foreverbuild")]
     [BepInIncompatibility("bonesbro.val.floorsareroofs")]
-    internal class BuildPiecesCustomized : BaseUnityPlugin
+    public class BuildPiecesCustomized : BaseUnityPlugin
     {
-        const string pluginID = "shudnal.BuildPiecesCustomized";
-        const string pluginName = "Build Pieces Customized";
-        const string pluginVersion = "1.0.7";
+        public const string pluginID = "shudnal.BuildPiecesCustomized";
+        public const string pluginName = "Build Pieces Customized";
+        public const string pluginVersion = "1.1.0";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -38,6 +37,7 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<string> prefabListAllowedInDungeons;
         internal static ConfigEntry<string> prefabListRepairPiece;
         internal static ConfigEntry<string> prefabListCanBeRemoved;
+        internal static ConfigEntry<string> prefabListIsRoof;
 
         internal static ConfigEntry<string> prefabListAshDamageImmune;
         internal static ConfigEntry<string> prefabListNoRoofWear;
@@ -58,8 +58,6 @@ namespace BuildPiecesCustomized
 
         private static FileSystemWatcher fileSystemWatcherPlugin;
         private static FileSystemWatcher fileSystemWatcherConfig;
-
-        internal const string allPiecesIdentifier = "AllPieces";
 
         internal class MaterialPropertiesConfig
         {
@@ -90,8 +88,8 @@ namespace BuildPiecesCustomized
         private void OnDestroy()
         {
             Config.Save();
-            instance = null;
             harmony?.UnpatchSelf();
+            instance = null;
         }
 
         public static void LogInfo(object data)
@@ -114,14 +112,27 @@ namespace BuildPiecesCustomized
 
             toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe,Cultivator", "Comma-separated list of tool prefab name to get build pieces from");
 
-            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            toolsToPatchPieces.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
-            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", "Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
+                                                                                            "\n Leaky -> Roof transition will be applied at the moment. Restart the game if you need Roof -> Leaky transition.");
+            prefabListClipEverything.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListAllowedInDungeons.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListRepairPiece.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListCanBeRemoved.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListIsRoof.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+
+            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+
+            prefabListAshDamageImmune.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListNoRoofWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListNoSupportWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
             foreach (WearNTear.MaterialType materialType in Enum.GetValues(typeof(WearNTear.MaterialType)))
             {
@@ -276,118 +287,69 @@ namespace BuildPiecesCustomized
                 }
             }
 
-            if (ZNetScene.instance)
-                instance.StartCoroutine(PatchPieces());
-
-            Piece.s_allPieces?.Do(piece => PatchPiece(piece));
-
-            Player.m_localPlayer?.UpdateAvailablePiecesList();
+            PiecePatches.UpdatePiecesProperties();
         }
 
-        private static void FillCraftingStations()
+        internal static readonly Dictionary<Piece, WearNTear> piecesWntComponent = new Dictionary<Piece, WearNTear>();
+
+        internal static WearNTear GetWearNTearComponent(Piece piece)
         {
-            craftingStations.Clear();
-            foreach (Recipe recipe in ObjectDB.instance.m_recipes)
-            {
-                if (recipe?.m_craftingStation == null)
-                    continue;
+            if (piecesWntComponent.TryGetValue(piece, out WearNTear wnt))
+                return wnt;
 
-                if (craftingStations.ContainsKey(recipe.m_craftingStation.name))
-                    continue;
+            WearNTear component = piece.GetComponent<WearNTear>();
 
-                craftingStations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
-                craftingStations[recipe.m_craftingStation.m_name] = recipe.m_craftingStation;
-                craftingStations[recipe.m_craftingStation.m_name.Substring(1)] = recipe.m_craftingStation;
-            }
+            piecesWntComponent[piece] = component;
+
+            return component;
         }
 
-        private static void PatchPiece(Piece piece)
-        {
-            if (piece == null || !ZNetScene.instance)
-                return;
-
-            string name = Utils.GetPrefabName(piece.gameObject);
-            if (!defaultPieceData.ContainsKey(name))
-            {
-                GameObject prefab = ZNetScene.instance.GetPrefab(name);
-
-                if (prefab == null || !prefab.TryGetComponent(out Piece defaultPiece))
-                    return;
-
-                defaultPieceData[name] = new CustomPieceData(defaultPiece);
-            }
-
-            defaultPieceData[name].PatchPiece(piece);
-
-            if (pieceData.ContainsKey(name))
-            {
-                LogInfo($"Patching {name}");
-                pieceData[name].PatchPiece(piece);
-            }
-
-            if (prefabListClipEverything.Value.Contains(allPiecesIdentifier) || prefabListClipEverything.Value.IndexOf(name) != -1)
-                piece.m_clipEverything = true;
-
-            if (prefabListAllowedInDungeons.Value.Contains(allPiecesIdentifier) || prefabListAllowedInDungeons.Value.IndexOf(name) != -1)
-                piece.m_allowedInDungeons = true;
-
-            if (prefabListRepairPiece.Value.Contains(allPiecesIdentifier) || prefabListRepairPiece.Value.IndexOf(name) != -1)
-                piece.m_repairPiece = true;
-
-            if (prefabListCanBeRemoved.Value.Contains(allPiecesIdentifier) || prefabListCanBeRemoved.Value.IndexOf(name) != -1)
-                piece.m_canBeRemoved = true;
-
-            if (piece.TryGetComponent(out WearNTear wnt))
-            {
-                if (prefabListAshDamageImmune.Value.Contains(allPiecesIdentifier) || prefabListAshDamageImmune.Value.IndexOf(name) != -1)
-                    wnt.m_ashDamageImmune = true;
-
-                if (prefabListNoRoofWear.Value.Contains(allPiecesIdentifier) || prefabListNoRoofWear.Value.IndexOf(name) != -1)
-                    wnt.m_noRoofWear = false;
-
-                if (prefabListNoSupportWear.Value.Contains(allPiecesIdentifier) || prefabListNoSupportWear.Value.IndexOf(name) != -1)
-                    wnt.m_noSupportWear = false;
-            }
-
-            if (piece.m_nview != null && piece.m_nview.IsValid())
-                piece.m_nview.LoadFields();
-        }
-
-        private static IEnumerator PatchPieces()
-        {
-            yield return new WaitUntil(() => ObjectDB.instance != null);
-
-            FillCraftingStations();
-
-            yield return new WaitForFixedUpdate();
-
-            foreach (GameObject go in CustomPieceData.GetBuildPieces())
-                if (go != null && go.TryGetComponent(out Piece piece))
-                    PatchPiece(piece);
-        }
-
-        [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.Awake))]
-        [HarmonyPriority(Priority.Last)]
-        private static class ZNetScene_Awake_PatchPieces
+        [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.OnDestroy))]
+        private static class ZoneSystem_OnDestroy_PiecesWntCache
         {
             private static void Postfix()
             {
                 if (!modEnabled.Value)
                     return;
 
-                SetupConfigWatcher();
+                piecesWntComponent.Clear();
             }
         }
 
         [HarmonyPatch(typeof(Piece), nameof(Piece.Awake))]
-        private static class Piece_Awake_PatchPiece
+        private static class Piece_Awake_PiecesWntCache
         {
-            private static void Postfix(Piece __instance)
+            private static void Prefix(Piece __instance)
             {
                 if (!modEnabled.Value)
                     return;
 
-                PatchPiece(__instance);
+                piecesWntComponent[__instance] = __instance.GetComponent<WearNTear>();
+            }
+        }
+
+        [HarmonyPatch(typeof(Piece), nameof(Piece.OnDestroy))]
+        private static class Piece_OnDestroy_PiecesWntCache
+        {
+            private static void Prefix(Piece __instance)
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                piecesWntComponent.Remove(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Start))]
+        private static class ZoneSystem_Start_PiecesConfigWatcher
+        {
+            [HarmonyPriority(Priority.Last)]
+            private static void Postfix()
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                SetupConfigWatcher();
             }
         }
 

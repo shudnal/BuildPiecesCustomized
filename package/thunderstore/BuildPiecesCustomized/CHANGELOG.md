@@ -1,3 +1,7 @@
+# 1.1.0
+* minor optimization
+* new global config option to make piece a roof
+
 # 1.0.7
 * bpcsaveall command to save several pieces JSON at once
 
