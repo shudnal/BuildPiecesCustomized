@@ -110,7 +110,7 @@ copy BuildPiecesCustomized.dll to your BepInEx\Plugins\ folder.
 ## Incompatibility
 Mod is incompatible with deprecated or outdated mods with similar purpose.
 
-* Floors are Roofs - copy floors list into "Water and rain damage immunity" config as is
+* Floors are Roofs - copy floors list into "List - Immune to -> Water damage" config and "List - Global setting -> Is Roof" config as is
 * Custom Building Material Proterties - edit material properties configs
 * Forever Build - edit either material properties or "Structural integrity" global list or noSupportWear value of individual piece
 * Build Piece Tweaks - similar purpose non updated for new Ashlands related properties

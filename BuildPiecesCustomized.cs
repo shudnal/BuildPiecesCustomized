@@ -119,7 +119,8 @@ namespace BuildPiecesCustomized
             prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
             prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
             prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", "Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
-                                                                                            "\n Leaky -> Roof transition will be applied at the moment. Restart the game if you need Roof -> Leaky transition.");
+                                                                                            "\nLeaky -> Roof transition will be applied immediately. Restart the game if you need Roof -> Leaky transition.");
+            
             prefabListClipEverything.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListAllowedInDungeons.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListRepairPiece.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
