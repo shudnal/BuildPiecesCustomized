@@ -1,3 +1,6 @@
+# 1.1.1
+* fixed AllPieces config setting not applying properly to all pieces
+
 # 1.1.0
 * minor optimization
 * new global config option to make piece a roof

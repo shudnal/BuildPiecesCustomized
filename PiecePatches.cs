@@ -131,14 +131,14 @@ namespace BuildPiecesCustomized
                 listNoRoofWear = ConfigToHashSet(prefabListNoRoofWear.Value);
                 listNoSupportWear = ConfigToHashSet(prefabListNoSupportWear.Value);
 
-                clipEverything = listClipEverything.Contains(allPiecesIdentifier);
-                allowedInDungeons = listAllowedInDungeons.Contains(allPiecesIdentifier);
-                repairPiece = listRepairPiece.Contains(allPiecesIdentifier);
-                canBeRemoved = listCanBeRemoved.Contains(allPiecesIdentifier);
-                isRoof = listIsRoof.Contains(allPiecesIdentifier);
-                ashDamageImmune = listAshDamageImmune.Contains(allPiecesIdentifier);
-                noRoofWear = listNoRoofWear.Contains(allPiecesIdentifier);
-                noSupportWear = listNoSupportWear.Contains(allPiecesIdentifier);
+                clipEverything = listClipEverything.Contains(allPiecesIdentifier.ToLower());
+                allowedInDungeons = listAllowedInDungeons.Contains(allPiecesIdentifier.ToLower());
+                repairPiece = listRepairPiece.Contains(allPiecesIdentifier.ToLower());
+                canBeRemoved = listCanBeRemoved.Contains(allPiecesIdentifier.ToLower());
+                isRoof = listIsRoof.Contains(allPiecesIdentifier.ToLower());
+                ashDamageImmune = listAshDamageImmune.Contains(allPiecesIdentifier.ToLower());
+                noRoofWear = listNoRoofWear.Contains(allPiecesIdentifier.ToLower());
+                noSupportWear = listNoSupportWear.Contains(allPiecesIdentifier.ToLower());
             }
 
             public static void PatchGlobalProperties(Piece piece, string pieceName)
