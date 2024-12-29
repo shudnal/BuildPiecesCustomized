@@ -1,3 +1,7 @@
+# 1.1.2
+* fixed patching Hoe pieces
+* documentation file will be generated with full list of items after world loading
+
 # 1.1.1
 * fixed AllPieces config setting not applying properly to all pieces
 

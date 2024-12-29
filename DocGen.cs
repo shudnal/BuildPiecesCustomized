@@ -137,5 +137,20 @@ namespace BuildPiecesCustomized
                 GenerateDocumentationFile();
             }
         }
+
+        [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Start))]
+        [HarmonyPriority(Priority.Last)]
+        private static class ZoneSystem_Start_DocGen
+        {
+            private static void Postfix()
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                GenerateDocumentationFile();
+            }
+        }
+
+
     }
 }

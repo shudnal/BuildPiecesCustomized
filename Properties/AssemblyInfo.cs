@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BuildPiecesCustomized")]
+[assembly: AssemblyTitle(BuildPiecesCustomized.BuildPiecesCustomized.pluginName)]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BuildPiecesCustomized")]
+[assembly: AssemblyProduct(BuildPiecesCustomized.BuildPiecesCustomized.pluginName)]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -48,7 +48,8 @@ namespace BuildPiecesCustomized
             {
                 GameObject prefab = ZNetScene.instance.GetPrefab(name);
 
-                if (prefab == null || !prefab.TryGetComponent(out Piece defaultPiece))
+                Piece defaultPiece = prefab == null ? Resources.FindObjectsOfTypeAll<Piece>().FirstOrDefault(p => p.name == name) : prefab.GetComponent<Piece>();
+                if (!(bool)defaultPiece)
                     return;
 
                 defaultPieceData[name] = new CustomPieceData(defaultPiece);
