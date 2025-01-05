@@ -1,3 +1,6 @@
+# 1.1.3
+* probably fixed occasional unharmful error on doc generation
+
 # 1.1.2
 * fixed patching Hoe pieces
 * documentation file will be generated with full list of items after world loading

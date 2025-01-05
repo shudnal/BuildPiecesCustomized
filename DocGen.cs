@@ -70,16 +70,14 @@ namespace BuildPiecesCustomized
                 Dictionary<string, CraftingStation> stations = new Dictionary<string, CraftingStation>();
                 foreach (Recipe recipe in ObjectDB.instance.m_recipes)
                 {
-                    if (recipe?.m_craftingStation == null)
+                    if (recipe == null || recipe.m_craftingStation == null)
                         continue;
 
                     stations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
                 }
 
                 foreach (KeyValuePair<string, CraftingStation> station in stations)
-                {
                     sb.AppendLine($"* {station.Key} - {Localization.instance.Localize(station.Value.m_name)}");
-                }
 
                 sb.AppendLine();
                 sb.AppendLine("# Piece prefab names");
@@ -88,7 +86,7 @@ namespace BuildPiecesCustomized
 
                 foreach (ItemDrop tool in ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Tool, ""))
                 {
-                    if (tool.m_itemData.m_shared.m_buildPieces?.m_pieces?.Count == 0)
+                    if (tool == null || tool.m_itemData.m_shared.m_buildPieces == null || tool.m_itemData.m_shared.m_buildPieces.m_pieces.Count == 0)
                         continue;
 
                     sb.AppendLine();
@@ -103,6 +101,7 @@ namespace BuildPiecesCustomized
                     }
                 }
             }
+
             return sb.ToString();
         }
 
