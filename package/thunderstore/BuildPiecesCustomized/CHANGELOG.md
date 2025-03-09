@@ -1,3 +1,7 @@
+# 1.1.4
+* patch 0.220.3
+* ServerSync updated
+
 # 1.1.3
 * probably fixed occasional unharmful error on doc generation
 
