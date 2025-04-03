@@ -103,6 +103,7 @@ namespace BuildPiecesCustomized
             private static bool repairPiece;
             private static bool canBeRemoved;
             private static bool isRoof;
+            private static bool isLeaky;
             private static bool ashDamageImmune;
             private static bool noRoofWear;
             private static bool noSupportWear;
@@ -112,6 +113,7 @@ namespace BuildPiecesCustomized
             private static HashSet<string> listRepairPiece;
             private static HashSet<string> listCanBeRemoved;
             private static HashSet<string> listIsRoof;
+            private static HashSet<string> listIsLeaky;
             private static HashSet<string> listAshDamageImmune;
             private static HashSet<string> listNoRoofWear;
             private static HashSet<string> listNoSupportWear;
@@ -128,6 +130,7 @@ namespace BuildPiecesCustomized
                 listRepairPiece = ConfigToHashSet(prefabListRepairPiece.Value);
                 listCanBeRemoved = ConfigToHashSet(prefabListCanBeRemoved.Value);
                 listIsRoof = ConfigToHashSet(prefabListIsRoof.Value);
+                listIsLeaky = ConfigToHashSet(prefabListIsLeaky.Value);
                 listAshDamageImmune = ConfigToHashSet(prefabListAshDamageImmune.Value);
                 listNoRoofWear = ConfigToHashSet(prefabListNoRoofWear.Value);
                 listNoSupportWear = ConfigToHashSet(prefabListNoSupportWear.Value);
@@ -137,6 +140,7 @@ namespace BuildPiecesCustomized
                 repairPiece = listRepairPiece.Contains(allPiecesIdentifier.ToLower());
                 canBeRemoved = listCanBeRemoved.Contains(allPiecesIdentifier.ToLower());
                 isRoof = listIsRoof.Contains(allPiecesIdentifier.ToLower());
+                isLeaky = listIsLeaky.Contains(allPiecesIdentifier.ToLower());
                 ashDamageImmune = listAshDamageImmune.Contains(allPiecesIdentifier.ToLower());
                 noRoofWear = listNoRoofWear.Contains(allPiecesIdentifier.ToLower());
                 noSupportWear = listNoSupportWear.Contains(allPiecesIdentifier.ToLower());
@@ -211,6 +215,14 @@ namespace BuildPiecesCustomized
                     {
                         LogInfo($"Patching {pieceName} leaky -> roof");
                         wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "leaky").Do(col => col.tag = "roof");
+                    }
+
+                    if (isLeaky)
+                        wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "roof").Do(col => col.tag = "leaky");
+                    else if (listIsLeaky.Contains(name))
+                    {
+                        LogInfo($"Patching {pieceName} roof -> leaky");
+                        wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "roof").Do(col => col.tag = "leaky");
                     }
                 }
             }

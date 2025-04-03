@@ -21,7 +21,7 @@ namespace BuildPiecesCustomized
     {
         public const string pluginID = "shudnal.BuildPiecesCustomized";
         public const string pluginName = "Build Pieces Customized";
-        public const string pluginVersion = "1.1.4";
+        public const string pluginVersion = "1.1.5";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -38,6 +38,7 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<string> prefabListRepairPiece;
         internal static ConfigEntry<string> prefabListCanBeRemoved;
         internal static ConfigEntry<string> prefabListIsRoof;
+        internal static ConfigEntry<string> prefabListIsLeaky;
 
         internal static ConfigEntry<string> prefabListAshDamageImmune;
         internal static ConfigEntry<string> prefabListNoRoofWear;
@@ -114,22 +115,26 @@ namespace BuildPiecesCustomized
 
             toolsToPatchPieces.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
-            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", "Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", "Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", "Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", "Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", "Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
-                                                                                            "\nLeaky -> Roof transition will be applied immediately. Restart the game if you need Roof -> Leaky transition.");
-            
+            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
+                                                                                            "\nLeaky -> Roof transition will be applied immediately. Restart the game if you need Roof -> Leaky transition of updated pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListIsLeaky = config("List - Global setting", "Is Roof", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
+                                                                                            "\nRoof -> Leaky transition will be applied immediately. Restart the game if you need Roof -> Leaky transition of updated pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+
+
             prefabListClipEverything.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListAllowedInDungeons.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListRepairPiece.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListCanBeRemoved.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListIsRoof.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListIsLeaky.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
-            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", "Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", "Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
-            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", "Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.");
+            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
 
             prefabListAshDamageImmune.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListNoRoofWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
@@ -255,13 +260,11 @@ namespace BuildPiecesCustomized
 
                 try
                 {
-                    using (FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (StreamReader reader = new StreamReader(fs))
-                    {
-                        localConfig.Add(Path.GetFileNameWithoutExtension(file.Name), reader.ReadToEnd());
-                        reader.Close();
-                        fs.Dispose();
-                    }
+                    using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    using StreamReader reader = new StreamReader(fs);
+                    localConfig.Add(Path.GetFileNameWithoutExtension(file.Name), reader.ReadToEnd());
+                    reader.Close();
+                    fs.Dispose();
                 }
                 catch (Exception e)
                 {

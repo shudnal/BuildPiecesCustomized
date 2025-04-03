@@ -31,8 +31,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="BuildPiecesCustomized.cs" />
+    <Compile Include="CustomConfigs.cs" />
     <Compile Include="CustomPieceData.cs" />
     <Compile Include="DocGen.cs" />
     <Compile Include="PiecePatches.cs" />
@@ -64,6 +68,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Assemblies\stable\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Assemblies\stable\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
       <HintPath>..\Assemblies\stable\UnityEngine.JSONSerializeModule.dll</HintPath>

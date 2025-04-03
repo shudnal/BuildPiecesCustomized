@@ -1,3 +1,7 @@
+# 1.1.5
+* new configs for roof -> leaky transition
+* new config drawers for string lists
+
 # 1.1.4
 * patch 0.220.3
 * ServerSync updated
