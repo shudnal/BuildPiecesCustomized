@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using static BuildPiecesCustomized.BuildPiecesCustomized;
@@ -27,6 +28,51 @@ namespace BuildPiecesCustomized
             }
         }
 
+        private static void LogPieceCategories()
+        {
+            var categories = new Dictionary<Piece.PieceCategory, string>();
+
+            PieceTable currentTool = Player.m_localPlayer.m_buildPieces;
+
+            foreach (var table in Resources.FindObjectsOfTypeAll<PieceTable>())
+            {
+                if (!table)
+                    continue;
+
+                Player.m_localPlayer.m_buildPieces = table;
+                Hud.instance?.LateUpdate();
+
+                int count = Mathf.Min(table.m_categories.Count, table.m_categoryLabels.Count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    var category = table.m_categories[i];
+
+                    if (categories.ContainsKey(category))
+                        continue;
+
+                    string label = table.m_categoryLabels[i];
+
+                    if (!string.IsNullOrWhiteSpace(label) && Localization.instance != null)
+                        label = Localization.instance.Localize(label);
+
+                    if (string.IsNullOrWhiteSpace(label))
+                        label = Enum.GetName(typeof(Piece.PieceCategory), category);
+
+                    if (string.IsNullOrWhiteSpace(label))
+                        label = category.ToString();
+
+                    categories[category] = label;
+                }
+            }
+
+            Player.m_localPlayer.m_buildPieces = currentTool;
+            Hud.instance?.LateUpdate();
+
+            foreach (var pair in categories.OrderBy(p => (int)p.Key))
+                sb.AppendLine($"* {(int)pair.Key} - {pair.Value}");
+        }
+
         private static string GetFileText()
         {
             sb.Clear();
@@ -38,7 +84,10 @@ namespace BuildPiecesCustomized
             sb.AppendLine();
 
             sb.AppendLine("## category");
-            EnumToList(typeof(Piece.PieceCategory));
+            if (Player.m_localPlayer != null)
+                LogPieceCategories();
+            else
+                EnumToList(typeof(Piece.PieceCategory));
 
             sb.AppendLine();
             sb.AppendLine("## comfortGroup");
@@ -60,7 +109,7 @@ namespace BuildPiecesCustomized
 
             sb.AppendLine();
             sb.AppendLine("### modifier");
-            EnumToList(typeof(HitData.DamageModifier), noID: true);
+            EnumToList(typeof(HitData.DamageModifier), noID:true);
 
             if ((bool)ObjectDB.instance)
             {
