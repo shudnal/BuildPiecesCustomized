@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using Newtonsoft.Json;
 using ServerSync;
-using UnityEngine;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using UnityEngine;
+using YamlDotNet.Serialization;
 
 namespace BuildPiecesCustomized
 {
@@ -21,7 +23,7 @@ namespace BuildPiecesCustomized
     {
         public const string pluginID = "shudnal.BuildPiecesCustomized";
         public const string pluginName = "Build Pieces Customized";
-        public const string pluginVersion = "1.1.5";
+        public const string pluginVersion = "1.2.0";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -215,11 +217,9 @@ namespace BuildPiecesCustomized
 
         public static void SetupConfigWatcher()
         {
-            string filter = $"*.json";
-
             if (fileSystemWatcherPlugin == null)
             {
-                fileSystemWatcherPlugin = new FileSystemWatcher(pluginDirectory.FullName, filter);
+                fileSystemWatcherPlugin = new FileSystemWatcher(pluginDirectory.FullName, "*.*");
                 fileSystemWatcherPlugin.Changed += new FileSystemEventHandler(ReadConfigs);
                 fileSystemWatcherPlugin.Created += new FileSystemEventHandler(ReadConfigs);
                 fileSystemWatcherPlugin.Renamed += new RenamedEventHandler(ReadConfigs);
@@ -234,7 +234,7 @@ namespace BuildPiecesCustomized
             {
                 if (configDirectory.Exists)
                 {
-                    fileSystemWatcherConfig = new FileSystemWatcher(configDirectory.FullName, filter);
+                    fileSystemWatcherConfig = new FileSystemWatcher(configDirectory.FullName, "*.*");
                     fileSystemWatcherConfig.Changed += new FileSystemEventHandler(ReadConfigs);
                     fileSystemWatcherConfig.Created += new FileSystemEventHandler(ReadConfigs);
                     fileSystemWatcherConfig.Renamed += new RenamedEventHandler(ReadConfigs);
@@ -254,10 +254,21 @@ namespace BuildPiecesCustomized
         {
             Dictionary<string, string> localConfig = new Dictionary<string, string>();
 
-            FileInfo[] configFiles = pluginDirectory.GetFiles("*.json", SearchOption.AllDirectories);
+            List<FileInfo> configFiles = new List<FileInfo>();
+
+            if (pluginDirectory.Exists)
+            {
+                configFiles.AddRange(pluginDirectory.GetFiles("*.json", SearchOption.AllDirectories));
+                configFiles.AddRange(pluginDirectory.GetFiles("*.yaml", SearchOption.AllDirectories));
+                configFiles.AddRange(pluginDirectory.GetFiles("*.yml", SearchOption.AllDirectories));
+            }
 
             if (configDirectory.Exists)
-                configFiles = configFiles.AddRangeToArray(configDirectory.GetFiles("*.json", SearchOption.AllDirectories));
+            {
+                configFiles.AddRange(configDirectory.GetFiles("*.json", SearchOption.AllDirectories));
+                configFiles.AddRange(configDirectory.GetFiles("*.yaml", SearchOption.AllDirectories));
+                configFiles.AddRange(configDirectory.GetFiles("*.yml", SearchOption.AllDirectories));
+            }
 
             foreach (FileInfo file in configFiles)
             {
@@ -267,9 +278,14 @@ namespace BuildPiecesCustomized
                 {
                     using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
                     using StreamReader reader = new StreamReader(fs);
-                    localConfig.Add(Path.GetFileNameWithoutExtension(file.Name), reader.ReadToEnd());
+                    string content = reader.ReadToEnd();
                     reader.Close();
                     fs.Dispose();
+
+                    if (file.Extension != ".json")
+                        content = JsonConvert.SerializeObject(YamlDeserializer.Deserialize<CustomPieceData>(content));
+
+                    localConfig.Add(Path.GetFileNameWithoutExtension(file.Name), content);
                 }
                 catch (Exception e)
                 {
@@ -280,6 +296,8 @@ namespace BuildPiecesCustomized
             configsJSON.AssignLocalValue(localConfig);
         }
 
+        internal static readonly IDeserializer YamlDeserializer = new DeserializerBuilder().IgnoreUnmatchedProperties().Build();
+
         private static void LoadConfigs()
         {
             pieceData.Clear();
@@ -288,7 +306,7 @@ namespace BuildPiecesCustomized
             {
                 try
                 {
-                    pieceData.Add(configJSON.Key, JsonUtility.FromJson<CustomPieceData>(configJSON.Value));
+                    pieceData.Add(configJSON.Key, JsonConvert.DeserializeObject<CustomPieceData>(configJSON.Value));
                 }
                 catch (Exception e)
                 {

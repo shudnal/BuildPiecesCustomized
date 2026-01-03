@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,181 +7,258 @@ using System.Linq;
 using UnityEngine;
 using static BuildPiecesCustomized.BuildPiecesCustomized;
 
+#nullable enable
+
 namespace BuildPiecesCustomized
 {
     [Serializable]
     internal class CustomPieceData
     {
-        public string prefabName;
+        public string? prefabName;
 
-        public string name;
-        public string description;
+        public string? name;
+        public string? description;
 
-        public bool enabled = true;
-        public Piece.PieceCategory category;
-        public Piece.ComfortGroup comfortGroup;
-        public int comfort;
-        public bool groundOnly;
-        public bool cultivatedGroundOnly;
-        public bool waterPiece;
-        public bool clipGround;
-        public bool clipEverything;
-        public bool noInWater;
-        public bool notOnWood;
-        public bool notOnTiltingSurface;
-        public bool inCeilingOnly;
-        public bool notOnFloor;
-        public bool noClipping;
-        public bool onlyInTeleportArea;
-        public bool allowedInDungeons;
-        public float spaceRequirement;
-        public bool repairPiece;
-        public bool canBeRemoved = true;
-        public bool allowRotatedOverlap;
-        public bool vegetationGroundOnly;
-        public float blockRadius;
-        public int extraPlacementDistance;
-        public string station = "";
-        public Heightmap.Biome onlyInBiome;
+        public bool? enabled;
+        public Piece.PieceCategory? category;
+        public Piece.ComfortGroup? comfortGroup;
+        public int? comfort;
+        public bool? groundOnly;
+        public bool? cultivatedGroundOnly;
+        public bool? waterPiece;
+        public bool? clipGround;
+        public bool? clipEverything;
+        public bool? noInWater;
+        public bool? notOnWood;
+        public bool? notOnTiltingSurface;
+        public bool? inCeilingOnly;
+        public bool? notOnFloor;
+        public bool? noClipping;
+        public bool? onlyInTeleportArea;
+        public bool? allowedInDungeons;
+        public float? spaceRequirement;
+        public bool? repairPiece;
+        public bool? canBeRemoved;
+        public bool? allowRotatedOverlap;
+        public bool? vegetationGroundOnly;
+        public float? blockRadius;
+        public int? extraPlacementDistance;
+        public string? station;
+        public Heightmap.Biome? onlyInBiome;
 
-        public bool targetNonPlayerBuilt = true;
-        public bool primaryTarget;
-        public bool randomTarget = true;
+        public bool? targetNonPlayerBuilt;
+        public bool? primaryTarget;
+        public bool? randomTarget;
 
-        public float health = 100f;
-        public bool noRoofWear = true;
-        public bool noSupportWear = true;
-        public WearNTear.MaterialType materialType;
-        public bool supports;
-        public float hitNoise;
-        public float destroyNoise;
-        public bool autoCreateFragments = true;
-        public List<string> damageModifiers = new List<string>();
+        public float? health;
+        public bool? noRoofWear;
+        public bool? noSupportWear;
+        public WearNTear.MaterialType? materialType;
+        public bool? supports;
+        public float? hitNoise;
+        public float? destroyNoise;
+        public bool? autoCreateFragments;
+        public List<string>? damageModifiers;
 
-        public bool ashDamageImmune;
-        public bool ashDamageResist;
-        public bool burnable = true;
-        public int minToolTier;
-        public bool triggerPrivateArea = true;
+        public bool? ashDamageImmune;
+        public bool? ashDamageResist;
+        public bool? burnable;
+        public int? minToolTier;
+        public bool? triggerPrivateArea;
 
-        public List<string> resources = new List<string>();
+        public List<string>? resources;
 
         internal void PatchPiece(Piece piece)
         {
-            piece.m_enabled = enabled;
+            if (enabled.HasValue)
+                piece.m_enabled = enabled.Value;
 
-            piece.m_name = name;
-            piece.m_description = description;
+            if (name != null)
+                piece.m_name = name;
 
-            piece.m_category = category;
-            piece.m_comfort = comfort;
-            piece.m_comfortGroup = comfortGroup;
-            piece.m_groundOnly = groundOnly;
-            piece.m_cultivatedGroundOnly = cultivatedGroundOnly;
-            piece.m_waterPiece = waterPiece;
-            piece.m_clipGround = clipGround;
-            piece.m_clipEverything = clipEverything;
-            piece.m_noInWater = noInWater;
-            piece.m_notOnWood = notOnWood;
-            piece.m_notOnTiltingSurface = notOnTiltingSurface;
-            piece.m_inCeilingOnly = inCeilingOnly;
-            piece.m_notOnFloor = notOnFloor;
-            piece.m_noClipping = noClipping;
-            piece.m_onlyInTeleportArea = onlyInTeleportArea;
-            piece.m_allowedInDungeons = allowedInDungeons;
-            piece.m_spaceRequirement = spaceRequirement;
-            piece.m_repairPiece = repairPiece;
-            piece.m_canBeRemoved = canBeRemoved;
+            if (description != null)
+                piece.m_description = description;
 
-            piece.m_allowRotatedOverlap = allowRotatedOverlap;
-            piece.m_vegetationGroundOnly = vegetationGroundOnly;
-            piece.m_blockRadius = blockRadius;
-            piece.m_extraPlacementDistance = extraPlacementDistance;
+            if (category.HasValue)
+                piece.m_category = category.Value;
 
-            piece.m_craftingStation = craftingStations.GetValueSafe(station);
-            piece.m_onlyInBiome = onlyInBiome;
+            if (comfort.HasValue)
+                piece.m_comfort = comfort.Value;
 
-            piece.m_targetNonPlayerBuilt = targetNonPlayerBuilt;
-            piece.m_primaryTarget = primaryTarget;
-            piece.m_randomTarget = randomTarget;
+            if (comfortGroup.HasValue)
+                piece.m_comfortGroup = comfortGroup.Value;
 
-            List<Piece.Requirement> m_resources = new List<Piece.Requirement>();
-            foreach (string modString in resources)
+            if (groundOnly.HasValue)
+                piece.m_groundOnly = groundOnly.Value;
+
+            if (cultivatedGroundOnly.HasValue)
+                piece.m_cultivatedGroundOnly = cultivatedGroundOnly.Value;
+
+            if (waterPiece.HasValue)
+                piece.m_waterPiece = waterPiece.Value;
+
+            if (clipGround.HasValue)
+                piece.m_clipGround = clipGround.Value;
+
+            if (clipEverything.HasValue)
+                piece.m_clipEverything = clipEverything.Value;
+
+            if (noInWater.HasValue)
+                piece.m_noInWater = noInWater.Value;
+
+            if (notOnWood.HasValue)
+                piece.m_notOnWood = notOnWood.Value;
+
+            if (notOnTiltingSurface.HasValue)
+                piece.m_notOnTiltingSurface = notOnTiltingSurface.Value;
+
+            if (inCeilingOnly.HasValue)
+                piece.m_inCeilingOnly = inCeilingOnly.Value;
+
+            if (notOnFloor.HasValue)
+                piece.m_notOnFloor = notOnFloor.Value;
+
+            if (noClipping.HasValue)
+                piece.m_noClipping = noClipping.Value;
+
+            if (onlyInTeleportArea.HasValue)
+                piece.m_onlyInTeleportArea = onlyInTeleportArea.Value;
+
+            if (allowedInDungeons.HasValue)
+                piece.m_allowedInDungeons = allowedInDungeons.Value;
+
+            if (spaceRequirement.HasValue)
+                piece.m_spaceRequirement = spaceRequirement.Value;
+
+            if (repairPiece.HasValue)
+                piece.m_repairPiece = repairPiece.Value;
+
+            if (canBeRemoved.HasValue)
+                piece.m_canBeRemoved = canBeRemoved.Value;
+
+            if (allowRotatedOverlap.HasValue)
+                piece.m_allowRotatedOverlap = allowRotatedOverlap.Value;
+
+            if (vegetationGroundOnly.HasValue)
+                piece.m_vegetationGroundOnly = vegetationGroundOnly.Value;
+
+            if (blockRadius.HasValue)
+                piece.m_blockRadius = blockRadius.Value;
+
+            if (extraPlacementDistance.HasValue)
+                piece.m_extraPlacementDistance = extraPlacementDistance.Value;
+
+            if (!string.IsNullOrEmpty(station))
+                piece.m_craftingStation = craftingStations.GetValueSafe(station);
+
+            if (onlyInBiome.HasValue)
+                piece.m_onlyInBiome = onlyInBiome.Value;
+
+            if (targetNonPlayerBuilt.HasValue)
+                piece.m_targetNonPlayerBuilt = targetNonPlayerBuilt.Value;
+
+            if (primaryTarget.HasValue)
+                piece.m_primaryTarget = primaryTarget.Value;
+
+            if (randomTarget.HasValue)
+                piece.m_randomTarget = randomTarget.Value;
+
+            if (resources != null)
             {
-                string[] parts = modString.Split(':');
+                var reqs = new List<Piece.Requirement>();
 
-                ItemDrop item = ObjectDB.instance?.GetItemPrefab(parts[0])?.GetComponent<ItemDrop>();
-                if (item == null)
-                    continue;
-
-                m_resources.Add(new Piece.Requirement()
-                {
-                    m_resItem = item,
-                    m_amount = parts.Length < 2 ? 1 : int.Parse(parts[1]),
-                    m_recover = parts.Length < 3 || bool.Parse(parts[2]),
-                });
-            }
-
-            piece.m_resources = m_resources.ToArray();
-
-            WearNTear wnt = GetWearNTearComponent(piece);
-            if (wnt != null)
-            {
-                wnt.m_health = health;
-                wnt.m_noRoofWear = noRoofWear;
-                wnt.m_noSupportWear = noSupportWear;
-                wnt.m_materialType = materialType;
-                wnt.m_supports = supports;
-                wnt.m_hitNoise = hitNoise;
-                wnt.m_destroyNoise = destroyNoise;
-                wnt.m_autoCreateFragments = autoCreateFragments;
-
-                wnt.m_ashDamageImmune = ashDamageImmune;
-                wnt.m_ashDamageResist = ashDamageResist;
-                wnt.m_burnable = burnable;
-                wnt.m_minToolTier = minToolTier;
-                wnt.m_triggerPrivateArea = triggerPrivateArea;
-
-                foreach (string modString in damageModifiers)
+                foreach (string modString in resources)
                 {
                     string[] parts = modString.Split(':');
-                    if (parts.Length != 2)
+                    if (parts.Length < 1)
                         continue;
 
-                    HitData.DamageType type = (HitData.DamageType)Enum.Parse(typeof(HitData.DamageType), parts[0]);
-                    HitData.DamageModifier mod = (HitData.DamageModifier)Enum.Parse(typeof(HitData.DamageModifier), parts[1]);
-                    switch (type)
+                    var item = ObjectDB.instance?.GetItemPrefab(parts[0])?.GetComponent<ItemDrop>();
+
+                    if (item == null)
+                        continue;
+
+                    reqs.Add(new Piece.Requirement
                     {
-                        case HitData.DamageType.Blunt:
-                            wnt.m_damages.m_blunt = mod;
-                            break;
-                        case HitData.DamageType.Slash:
-                            wnt.m_damages.m_slash = mod;
-                            break;
-                        case HitData.DamageType.Pierce:
-                            wnt.m_damages.m_pierce = mod;
-                            break;
-                        case HitData.DamageType.Chop:
-                            wnt.m_damages.m_chop = mod;
-                            break;
-                        case HitData.DamageType.Pickaxe:
-                            wnt.m_damages.m_pickaxe = mod;
-                            break;
-                        case HitData.DamageType.Fire:
-                            wnt.m_damages.m_fire = mod;
-                            break;
-                        case HitData.DamageType.Frost:
-                            wnt.m_damages.m_frost = mod;
-                            break;
-                        case HitData.DamageType.Lightning:
-                            wnt.m_damages.m_lightning = mod;
-                            break;
-                        case HitData.DamageType.Poison:
-                            wnt.m_damages.m_poison = mod;
-                            break;
-                        case HitData.DamageType.Spirit:
-                            wnt.m_damages.m_spirit = mod;
-                            break;
+                        m_resItem = item,
+                        m_amount = parts.Length > 1 ? int.Parse(parts[1]) : 1,
+                        m_recover = parts.Length < 3 || bool.Parse(parts[2])
+                    });
+                }
+
+                piece.m_resources = reqs.ToArray();
+            }
+
+            if (GetWearNTearComponent(piece) is WearNTear wnt)
+            {
+                if (health.HasValue)
+                    wnt.m_health = health.Value;
+
+                if (noRoofWear.HasValue)
+                    wnt.m_noRoofWear = noRoofWear.Value;
+
+                if (noSupportWear.HasValue)
+                    wnt.m_noSupportWear = noSupportWear.Value;
+
+                if (supports.HasValue)
+                    wnt.m_supports = supports.Value;
+
+                if (hitNoise.HasValue)
+                    wnt.m_hitNoise = hitNoise.Value;
+
+                if (destroyNoise.HasValue)
+                    wnt.m_destroyNoise = destroyNoise.Value;
+
+                if (autoCreateFragments.HasValue)
+                    wnt.m_autoCreateFragments = autoCreateFragments.Value;
+
+                if (ashDamageImmune.HasValue)
+                    wnt.m_ashDamageImmune = ashDamageImmune.Value;
+
+                if (ashDamageResist.HasValue)
+                    wnt.m_ashDamageResist = ashDamageResist.Value;
+
+                if (burnable.HasValue)
+                    wnt.m_burnable = burnable.Value;
+
+                if (minToolTier.HasValue)
+                    wnt.m_minToolTier = minToolTier.Value;
+
+                if (triggerPrivateArea.HasValue)
+                    wnt.m_triggerPrivateArea = triggerPrivateArea.Value;
+
+                if (materialType.HasValue)
+                    wnt.m_materialType = materialType.Value;
+
+                if (damageModifiers != null)
+                {
+                    foreach (string modString in damageModifiers)
+                    {
+                        var parts = modString.Split(':');
+                        if (parts.Length != 2)
+                            continue;
+
+                        if (!Enum.TryParse(parts[0], out HitData.DamageType type))
+                            continue;
+
+                        if (!Enum.TryParse(parts[1], out HitData.DamageModifier mod))
+                            continue;
+
+                        ref var dmg = ref wnt.m_damages;
+
+                        switch (type)
+                        {
+                            case HitData.DamageType.Blunt: dmg.m_blunt = mod; break;
+                            case HitData.DamageType.Slash: dmg.m_slash = mod; break;
+                            case HitData.DamageType.Pierce: dmg.m_pierce = mod; break;
+                            case HitData.DamageType.Chop: dmg.m_chop = mod; break;
+                            case HitData.DamageType.Pickaxe: dmg.m_pickaxe = mod; break;
+                            case HitData.DamageType.Fire: dmg.m_fire = mod; break;
+                            case HitData.DamageType.Frost: dmg.m_frost = mod; break;
+                            case HitData.DamageType.Lightning: dmg.m_lightning = mod; break;
+                            case HitData.DamageType.Poison: dmg.m_poison = mod; break;
+                            case HitData.DamageType.Spirit: dmg.m_spirit = mod; break;
+                        }
                     }
                 }
             }
@@ -192,7 +270,7 @@ namespace BuildPiecesCustomized
 
             string filename = Path.Combine(directory, $"{prefabName}.json");
 
-            File.WriteAllText(filename, JsonUtility.ToJson(this, true));
+            File.WriteAllText(filename, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
 
         internal CustomPieceData()
@@ -237,6 +315,7 @@ namespace BuildPiecesCustomized
             primaryTarget = piece.m_primaryTarget;
             randomTarget = piece.m_randomTarget;
 
+            resources = new List<string>();
             resources.AddRange(piece.m_resources.Select(req => { return $"{req.m_resItem.name}:{req.m_amount}:{req.m_recover}"; }));
 
             WearNTear wnt = GetWearNTearComponent(piece);
@@ -273,12 +352,12 @@ namespace BuildPiecesCustomized
             }
         }
 
-        internal static CustomPieceData GetByPieceName(string pieceName)
+        internal static CustomPieceData? GetByPieceName(string pieceName)
         {
             if (!(bool)ObjectDB.instance)
                 return null;
 
-            GameObject prefab = GetBuildPieces().First(buildPiece => buildPiece.name == pieceName);
+            GameObject prefab = GetBuildPieces().FirstOrDefault(buildPiece => buildPiece.name == pieceName); 
             if (prefab == null) 
                 return null;
 
@@ -296,7 +375,7 @@ namespace BuildPiecesCustomized
 
             foreach (string toolName in toolList)
             {
-                ItemDrop tool = ObjectDB.instance.GetItemPrefab(toolName)?.GetComponent<ItemDrop>();
+                var tool = ObjectDB.instance.GetItemPrefab(toolName)?.GetComponent<ItemDrop>();
 
                 if (tool == null)
                     continue;
