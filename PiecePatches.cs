@@ -97,6 +97,7 @@ namespace BuildPiecesCustomized
         public static class GlobalPatches
         {
             public const string allPiecesIdentifier = "AllPieces";
+            private static readonly string allPiecesListIdentifier = allPiecesIdentifier.ToLower();
 
             private static bool clipEverything;
             private static bool allowedInDungeons;
@@ -117,6 +118,7 @@ namespace BuildPiecesCustomized
             private static HashSet<string> listAshDamageImmune;
             private static HashSet<string> listNoRoofWear;
             private static HashSet<string> listNoSupportWear;
+            private static HashSet<string> listDisabled;
 
             private static HashSet<string> ConfigToHashSet(string configString)
             {
@@ -134,16 +136,17 @@ namespace BuildPiecesCustomized
                 listAshDamageImmune = ConfigToHashSet(prefabListAshDamageImmune.Value);
                 listNoRoofWear = ConfigToHashSet(prefabListNoRoofWear.Value);
                 listNoSupportWear = ConfigToHashSet(prefabListNoSupportWear.Value);
+                listDisabled = ConfigToHashSet(prefabListDisabled.Value);
 
-                clipEverything = listClipEverything.Contains(allPiecesIdentifier.ToLower());
-                allowedInDungeons = listAllowedInDungeons.Contains(allPiecesIdentifier.ToLower());
-                repairPiece = listRepairPiece.Contains(allPiecesIdentifier.ToLower());
-                canBeRemoved = listCanBeRemoved.Contains(allPiecesIdentifier.ToLower());
-                isRoof = listIsRoof.Contains(allPiecesIdentifier.ToLower());
-                isLeaky = listIsLeaky.Contains(allPiecesIdentifier.ToLower());
-                ashDamageImmune = listAshDamageImmune.Contains(allPiecesIdentifier.ToLower());
-                noRoofWear = listNoRoofWear.Contains(allPiecesIdentifier.ToLower());
-                noSupportWear = listNoSupportWear.Contains(allPiecesIdentifier.ToLower());
+                clipEverything = listClipEverything.Contains(allPiecesListIdentifier);
+                allowedInDungeons = listAllowedInDungeons.Contains(allPiecesListIdentifier);
+                repairPiece = listRepairPiece.Contains(allPiecesListIdentifier);
+                canBeRemoved = listCanBeRemoved.Contains(allPiecesListIdentifier);
+                isRoof = listIsRoof.Contains(allPiecesListIdentifier);
+                isLeaky = listIsLeaky.Contains(allPiecesListIdentifier);
+                ashDamageImmune = listAshDamageImmune.Contains(allPiecesListIdentifier);
+                noRoofWear = listNoRoofWear.Contains(allPiecesListIdentifier);
+                noSupportWear = listNoSupportWear.Contains(allPiecesListIdentifier);
             }
 
             public static void PatchGlobalProperties(Piece piece, string pieceName)
@@ -181,6 +184,9 @@ namespace BuildPiecesCustomized
                     LogInfo($"Patching {pieceName} can be removed");
                     piece.m_canBeRemoved = true;
                 }
+
+                if (listDisabled.Contains(name))
+                    piece.m_enabled = false;
 
                 WearNTear wnt = GetWearNTearComponent(piece);
                 if (wnt != null)

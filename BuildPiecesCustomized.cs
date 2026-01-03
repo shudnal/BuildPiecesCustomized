@@ -39,6 +39,7 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<string> prefabListCanBeRemoved;
         internal static ConfigEntry<string> prefabListIsRoof;
         internal static ConfigEntry<string> prefabListIsLeaky;
+        internal static ConfigEntry<string> prefabListDisabled;
 
         internal static ConfigEntry<string> prefabListAshDamageImmune;
         internal static ConfigEntry<string> prefabListNoRoofWear;
@@ -119,6 +120,7 @@ namespace BuildPiecesCustomized
             prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
             prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
             prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListDisabled = config("List - Global setting", "Disabled pieces", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be disabled.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
             prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
                                                                                             "\nLeaky -> Roof transition will be applied immediately. " +
                                                                                             "\nRestart the game if you need Roof -> Leaky transition of updated pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
@@ -131,6 +133,7 @@ namespace BuildPiecesCustomized
             prefabListAllowedInDungeons.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListRepairPiece.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListCanBeRemoved.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListDisabled.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListIsRoof.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListIsLeaky.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
