@@ -268,9 +268,9 @@ namespace BuildPiecesCustomized
         {
             Directory.CreateDirectory(directory);
 
-            string filename = Path.Combine(directory, $"{prefabName}.json");
+            string filename = Path.Combine(directory, $"{prefabName}.{(saveAsYAML.Value ? "yaml" : "json")}");
 
-            File.WriteAllText(filename, JsonConvert.SerializeObject(this, Formatting.Indented));
+            File.WriteAllText(filename, saveAsYAML.Value ? YamlSerializer.Serialize(this) : JsonConvert.SerializeObject(this, Formatting.Indented));
         }
 
         internal CustomPieceData()

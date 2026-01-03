@@ -32,6 +32,7 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<bool> modEnabled;
         internal static ConfigEntry<bool> configLocked;
         internal static ConfigEntry<bool> loggingEnabled;
+        internal static ConfigEntry<bool> saveAsYAML;
 
         internal static ConfigEntry<string> toolsToPatchPieces;
 
@@ -62,6 +63,9 @@ namespace BuildPiecesCustomized
 
         private static FileSystemWatcher fileSystemWatcherPlugin;
         private static FileSystemWatcher fileSystemWatcherConfig;
+
+        internal static readonly IDeserializer YamlDeserializer = new DeserializerBuilder().IgnoreUnmatchedProperties().Build();
+        internal static readonly ISerializer YamlSerializer = new SerializerBuilder().Build();
 
         internal class MaterialPropertiesConfig
         {
@@ -113,6 +117,7 @@ namespace BuildPiecesCustomized
             modEnabled = config("General", "Enabled", defaultValue: true, "Enable the mod.");
             configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
             loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Not Synced with Server]", false);
+            saveAsYAML = config("General", "Save piece data as YAML", defaultValue: false, "Save piece data in YAML format. [Not Synced with Server]", false); 
 
             toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe,Cultivator", "Comma-separated list of tool prefab name to get build pieces from");
 
@@ -295,8 +300,6 @@ namespace BuildPiecesCustomized
 
             configsJSON.AssignLocalValue(localConfig);
         }
-
-        internal static readonly IDeserializer YamlDeserializer = new DeserializerBuilder().IgnoreUnmatchedProperties().Build();
 
         private static void LoadConfigs()
         {
