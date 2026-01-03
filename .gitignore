@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /package/thunderstore/BuildPiecesCustomized/BuildPiecesCustomized.dll
 /package/thunderstore/BuildPiecesCustomized.zip
+/package/nexus/BuildPiecesCustomized/BuildPiecesCustomized.dll
+/package/nexus/BuildPiecesCustomized.zip
