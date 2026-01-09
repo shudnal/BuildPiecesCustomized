@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using HarmonyLib;
 using Newtonsoft.Json;
@@ -52,7 +53,8 @@ namespace BuildPiecesCustomized
 
         internal static BuildPiecesCustomized instance;
 
-        private static readonly CustomSyncedValue<Dictionary<string, string>> configsJSON = new CustomSyncedValue<Dictionary<string, string>>(configSync, "JSON configs", new Dictionary<string, string>());
+        internal static readonly CustomSyncedValue<Dictionary<string, string>> configsJSON = new CustomSyncedValue<Dictionary<string, string>>(configSync, "JSON configs", new Dictionary<string, string>());
+        internal static readonly CustomSyncedValue<Dictionary<string, int>> pieceCategories = new CustomSyncedValue<Dictionary<string, int>>(configSync, "Pieces categories", new Dictionary<string, int>());
 
         internal static readonly Dictionary<string, CustomPieceData> pieceData = new Dictionary<string, CustomPieceData>();
         internal static readonly Dictionary<string, CraftingStation> craftingStations = new Dictionary<string, CraftingStation>();
@@ -89,6 +91,7 @@ namespace BuildPiecesCustomized
             _ = configSync.AddLockingConfigEntry(configLocked);
 
             configsJSON.ValueChanged += new Action(LoadConfigs);
+            pieceCategories.ValueChanged += new Action(PiecePatches.UpdatePiecesProperties);
 
             Game.isModded = true;
         }
@@ -110,6 +113,10 @@ namespace BuildPiecesCustomized
             instance.Logger.LogWarning(data);
         }
 
+        private ConfigDescription GetDescriptionSeparatedStrings(string description) =>
+            Chainloader.PluginInfos.ContainsKey("_shudnal.ConfigurationManager")
+                    ? new ConfigDescription(description)
+                    : new ConfigDescription(description, null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") });
         public void ConfigInit()
         {
             config("General", "NexusID", 2782, "Nexus mod ID for updates", false);
@@ -117,23 +124,23 @@ namespace BuildPiecesCustomized
             modEnabled = config("General", "Enabled", defaultValue: true, "Enable the mod.");
             configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
             loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Not Synced with Server]", false);
-            saveAsYAML = config("General", "Save piece data as YAML", defaultValue: false, "Save piece data in YAML format. [Not Synced with Server]", false); 
+            saveAsYAML = config("General", "Save piece data as YAML", defaultValue: false, "Save piece data in YAML format. [Not Synced with Server]", false);
 
             toolsToPatchPieces = config("General", "Tools list", defaultValue: "Hammer,Hoe,Cultivator", "Comma-separated list of tool prefab name to get build pieces from");
 
             toolsToPatchPieces.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
-            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListDisabled = config("List - Global setting", "Disabled pieces", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be disabled.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
+            prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListDisabled = config("List - Global setting", "Disabled pieces", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be disabled."));
+            prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
                                                                                             "\nLeaky -> Roof transition will be applied immediately. " +
-                                                                                            "\nRestart the game if you need Roof -> Leaky transition of updated pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListIsLeaky = config("List - Global setting", "Is Leaky", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will not work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
+                                                                                            "\nRestart the game if you need Roof -> Leaky transition of updated pieces."));
+            prefabListIsLeaky = config("List - Global setting", "Is Leaky", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will not work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
                                                                                             "\nRoof -> Leaky transition will be applied immediately. " +
-                                                                                            "\nRestart the game if you need Leaky -> Roof transition of updated pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+                                                                                            "\nRestart the game if you need Leaky -> Roof transition of updated pieces."));
 
 
             prefabListClipEverything.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
@@ -144,9 +151,9 @@ namespace BuildPiecesCustomized
             prefabListIsRoof.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListIsLeaky.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
-            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
-            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", new ConfigDescription("Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces.", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") }));
+            prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
 
             prefabListAshDamageImmune.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListNoRoofWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
@@ -257,7 +264,7 @@ namespace BuildPiecesCustomized
 
         private static void ReadConfigs(object sender, FileSystemEventArgs eargs)
         {
-            Dictionary<string, string> localConfig = new Dictionary<string, string>();
+            Dictionary<string, string> localConfigsJSON = new Dictionary<string, string>();
 
             List<FileInfo> configFiles = new List<FileInfo>();
 
@@ -277,6 +284,9 @@ namespace BuildPiecesCustomized
 
             foreach (FileInfo file in configFiles)
             {
+                if (file.Name == "manifest.json")
+                    continue;
+
                 LogInfo($"Found {file.FullName}");
 
                 try
@@ -287,10 +297,23 @@ namespace BuildPiecesCustomized
                     reader.Close();
                     fs.Dispose();
 
-                    if (file.Extension != ".json")
-                        content = JsonConvert.SerializeObject(YamlDeserializer.Deserialize<CustomPieceData>(content));
+                    string filename = Path.GetFileNameWithoutExtension(file.Name);
 
-                    localConfig.Add(Path.GetFileNameWithoutExtension(file.Name), content);
+                    if (filename == "Piece categories")
+                    {
+                        Dictionary<int, List<string>> categories = (file.Extension != ".json" ? 
+                                                            YamlDeserializer.Deserialize<Dictionary<int, List<string>>>(content) : 
+                                                            JsonConvert.DeserializeObject<Dictionary<int, List<string>>>(content));
+
+                        pieceCategories.AssignLocalValue(categories.SelectMany(kv => kv.Value.Select(v => new { Key = v, Value = kv.Key })).ToDictionary(x => x.Key.ToLower(), x => x.Value));
+                    }
+                    else
+                    {
+                        if (file.Extension != ".json")
+                            content = JsonConvert.SerializeObject(YamlDeserializer.Deserialize<CustomPieceData>(content));
+
+                        localConfigsJSON.Add(filename, content);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -298,7 +321,7 @@ namespace BuildPiecesCustomized
                 }
             }
 
-            configsJSON.AssignLocalValue(localConfig);
+            configsJSON.AssignLocalValue(localConfigsJSON);
         }
 
         private static void LoadConfigs()

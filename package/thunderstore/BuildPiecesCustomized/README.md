@@ -20,10 +20,12 @@ There are several global lists set in config values:
 * Water and rain damage immunity
 * Structural integrity
 * Is roof
+* Is leaky (non-roof)
+* Should be disabled
 
 All lists are comma-separated lists of prefab names. If prefab name is set in some list this value will override individual settings.
 
-If you want all pieces to share that value then set "AllPieces" in config value.
+If you want all pieces to share that value then set "AllPieces" in config value. Except "Disabled pieces" config.
 
 ## Material properties
 
@@ -45,6 +47,35 @@ Use it to find exact prefab name of piece to start customizing.
 
 That file could be regenerated manually at any time using `bpcdocs` console command.
 
+If you generate the file from main menu categories names will not be localized.
+
+If you generate the file while ingame and holding hammer in hand - catogories will have localized names.
+
+## Piece categories configuration
+
+Often all you need is to move groups of pieces from one category to another.
+
+If you create file `Piece categories.yaml` with content
+
+```
+3:
+  - copper_roof
+  - copper_roof_45
+```
+
+then `copper_roof` and `copper_roof_45` pieces will be moved into category 3 (Heavy Builds). These values will override values from single piece files.
+
+For `Piece categories.json` similar content would be
+
+```
+{
+  "3": [
+    "copper_roof",
+    "copper_roof_45"
+  ]
+}
+```
+
 ## Setting individual values
 
 At first you need to generate template file with prefab name and current properties.
@@ -57,6 +88,8 @@ If you trying to save file for already altered piece you should do it from main 
 
 You can change properties in that file as you want and then save it.
 
+You can leave only several changed properties in the file. Every omitted property will fall to default value.
+
 After editing you can move that file in any subfolder in mods directory. You can also place this files in `\BepInEx\config\shudnal.BuildPiecesCustomized` directory (first you need to create it manually). Or you can leave it next to mod dll.
 
 All *.json files from all subdirectories in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder and plugin folder will be loaded on the world login.
@@ -67,7 +100,7 @@ On every file loading there will be line in log like this
 
 If you place that files on the server then its settings will be shared from the server.
 
-If you want to undo changes delete the file and restart the game.
+If you want to undo changes delete the file.
 
 ## Properties meaning
 
@@ -127,3 +160,6 @@ Or [Official BepInEx Configuration Manager](https://thunderstore.io/c/valheim/p/
 
 ## Donation
 [Buy Me a Coffee](https://buymeacoffee.com/shudnal)
+
+## Discord
+[Join server](https://discord.gg/e3UtQB8GFK)

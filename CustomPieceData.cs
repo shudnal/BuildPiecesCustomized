@@ -148,7 +148,7 @@ namespace BuildPiecesCustomized
             if (extraPlacementDistance.HasValue)
                 piece.m_extraPlacementDistance = extraPlacementDistance.Value;
 
-            if (!string.IsNullOrEmpty(station))
+            if (station != null)
                 piece.m_craftingStation = craftingStations.GetValueSafe(station);
 
             if (onlyInBiome.HasValue)

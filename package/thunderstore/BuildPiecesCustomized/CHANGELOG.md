@@ -1,3 +1,9 @@
+# 1.2.0
+* support for YAML files (new config to save piece data as YAML, disabled by default)
+* support for partially filled files (missing properties will fallback to default value)
+* new config "Disabled pieces" for disabling pieces en masse
+* new config file with fixed name "Piece categories.json" for moving pieces between categories en masse
+
 # 1.1.5
 * new configs for roof -> leaky transition
 * new config drawers for string lists

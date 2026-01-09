@@ -1,7 +1,10 @@
 {
   "name": "BuildPiecesCustomized",
-  "version_number": "1.1.5",
+  "version_number": "1.2.0",
   "website_url": "https://github.com/shudnal/BuildPiecesCustomized",
   "description": "Customize individual build pieces. Set properties globally such as rain, water, ash, lava damage immunity. Customize global material type properties.",
-  "dependencies": ["denikson-BepInExPack_Valheim-5.4.2202"]
-}
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2333",
+    "ValheimModding-YamlDotNet-16.3.0",
+    "ValheimModding-JsonDotNET-13.0.3"
+  ]}

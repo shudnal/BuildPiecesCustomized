@@ -94,6 +94,50 @@ namespace BuildPiecesCustomized
             }
         }
 
+        [HarmonyPatch(typeof(PieceTable), nameof(PieceTable.IsPieceAvailable))]
+        private static class PieceTable_IsPieceAvailable_PieceDisabled
+        {
+            private static void Postfix(PieceTable __instance, Piece piece, ref bool __result)
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                if (__result && GlobalPatches.IsPieceForceDisabled(piece))
+                    __result = false;
+            }
+        }
+
+        [HarmonyPatch(typeof(PieceTable), nameof(PieceTable.UpdateAvailable))]
+        private static class PieceTable_UpdateAvailable_PieceDisabled
+        {
+            [HarmonyPriority(Priority.First)]
+            private static void Prefix(PieceTable __instance, ref List<GameObject> __state)
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                __state = __instance.m_pieces.ToList();
+                int removed = __instance.m_pieces.RemoveAll(GlobalPatches.IsPieceForceDisabled);
+                if (removed > 0)
+                    LogInfo($"Removed pieces {__instance.name}: {removed}/{__state.Count}");
+                else
+                    __state = null;
+            }
+
+            private static void Finalizer(PieceTable __instance, List<GameObject> __state)
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                if (__state != null)
+                {
+                    __instance.m_pieces.Clear();
+                    __instance.m_pieces.AddRange(__state);
+                    LogInfo($"Restored pieces {__instance.name}: {__instance.m_pieces.Count}");
+                }
+            }
+        }
+
         public static class GlobalPatches
         {
             public const string allPiecesIdentifier = "AllPieces";
@@ -149,6 +193,9 @@ namespace BuildPiecesCustomized
                 noSupportWear = listNoSupportWear.Contains(allPiecesListIdentifier);
             }
 
+            public static bool IsPieceForceDisabled(Piece piece) => !piece.m_enabled && listDisabled.Contains(piece.name.ToLower());
+            public static bool IsPieceForceDisabled(GameObject gameObject) => gameObject.TryGetComponent(out Piece piece) && IsPieceForceDisabled(piece);
+
             public static void PatchGlobalProperties(Piece piece, string pieceName)
             {
                 string name = pieceName.ToLower();
@@ -186,7 +233,12 @@ namespace BuildPiecesCustomized
                 }
 
                 if (listDisabled.Contains(name))
+                {
                     piece.m_enabled = false;
+                    piece.m_category = 0;
+                }
+                else if (pieceCategories.Value.TryGetValue(name, out int category) && category >= 0)
+                    piece.m_category = (Piece.PieceCategory)category;
 
                 WearNTear wnt = GetWearNTearComponent(piece);
                 if (wnt != null)
