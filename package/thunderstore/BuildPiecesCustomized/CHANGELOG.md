@@ -1,3 +1,9 @@
+# 1.2.2
+* Updated for the Valheim 1.0.7 release.
+* Completed the migration to the standalone ConditionalConfigSync dependency.
+* Updated required dependencies to BepInExPack Valheim 5.4.2350 and ConditionalConfigSync 1.0.5.
+* Rebuild category configuration without retaining entries from deleted files and handle empty configuration data.
+
 # 1.2.0
 * support for YAML files (new config to save piece data as YAML, disabled by default)
 * support for partially filled files (missing properties will fallback to default value)

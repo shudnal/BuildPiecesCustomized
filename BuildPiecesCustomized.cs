@@ -3,7 +3,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using HarmonyLib;
 using Newtonsoft.Json;
-using ServerSync;
+using ConditionalConfigSync;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +16,7 @@ using YamlDotNet.Serialization;
 namespace BuildPiecesCustomized
 {
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
+    [BepInDependency("_shudnal.ConditionalConfigSync", "1.0.5")]
     [BepInIncompatibility("aedenthorn.BuildPieceTweaks")]
     [BepInIncompatibility("TheSxW_EditMaterialProperties")]
     [BepInIncompatibility("lime.plugins.foreverbuild")]
@@ -24,7 +25,7 @@ namespace BuildPiecesCustomized
     {
         public const string pluginID = "shudnal.BuildPiecesCustomized";
         public const string pluginName = "Build Pieces Customized";
-        public const string pluginVersion = "1.2.0";
+        public const string pluginVersion = "1.2.2";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -119,7 +120,6 @@ namespace BuildPiecesCustomized
                     : new ConfigDescription(description, null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawSeparatedStrings(",") });
         public void ConfigInit()
         {
-            config("General", "NexusID", 2782, "Nexus mod ID for updates", false);
 
             modEnabled = config("General", "Enabled", defaultValue: true, "Enable the mod.");
             configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
@@ -177,8 +177,7 @@ namespace BuildPiecesCustomized
         {
             ConfigEntry<T> configEntry = Config.Bind(group, name, defaultValue, description);
 
-            SyncedConfigEntry<T> syncedConfigEntry = configSync.AddConfigEntry(configEntry);
-            syncedConfigEntry.SynchronizedConfig = synchronizedSetting;
+            configSync.AddConfigEntry(configEntry, ConfigSyncMode.Conditional, serverControlledByDefault: synchronizedSetting);
 
             return configEntry;
         }
@@ -264,7 +263,8 @@ namespace BuildPiecesCustomized
 
         private static void ReadConfigs(object sender, FileSystemEventArgs eargs)
         {
-            Dictionary<string, string> localConfigsJSON = new Dictionary<string, string>();
+            Dictionary<string, string> localConfigsJSON = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> localCategories = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             List<FileInfo> configFiles = new List<FileInfo>();
 
@@ -305,14 +305,22 @@ namespace BuildPiecesCustomized
                                                             YamlDeserializer.Deserialize<Dictionary<int, List<string>>>(content) : 
                                                             JsonConvert.DeserializeObject<Dictionary<int, List<string>>>(content));
 
-                        pieceCategories.AssignLocalValue(categories.SelectMany(kv => kv.Value.Select(v => new { Key = v, Value = kv.Key })).ToDictionary(x => x.Key.ToLower(), x => x.Value));
+                        if (categories != null)
+                            foreach (KeyValuePair<int, List<string>> category in categories)
+                            {
+                                if (category.Value == null)
+                                    continue;
+                                foreach (string pieceName in category.Value)
+                                    if (!string.IsNullOrWhiteSpace(pieceName))
+                                        localCategories[pieceName.Trim().ToLowerInvariant()] = category.Key;
+                            }
                     }
                     else
                     {
                         if (file.Extension != ".json")
                             content = JsonConvert.SerializeObject(YamlDeserializer.Deserialize<CustomPieceData>(content));
 
-                        localConfigsJSON.Add(filename, content);
+                        localConfigsJSON[filename] = content;
                     }
                 }
                 catch (Exception e)
@@ -321,6 +329,7 @@ namespace BuildPiecesCustomized
                 }
             }
 
+            pieceCategories.AssignLocalValue(localCategories);
             configsJSON.AssignLocalValue(localConfigsJSON);
         }
 
@@ -332,7 +341,9 @@ namespace BuildPiecesCustomized
             {
                 try
                 {
-                    pieceData.Add(configJSON.Key, JsonConvert.DeserializeObject<CustomPieceData>(configJSON.Value));
+                    CustomPieceData data = JsonConvert.DeserializeObject<CustomPieceData>(configJSON.Value);
+                    if (data != null)
+                        pieceData[configJSON.Key] = data;
                 }
                 catch (Exception e)
                 {
