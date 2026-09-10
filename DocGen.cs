@@ -32,42 +32,35 @@ namespace BuildPiecesCustomized
         {
             var categories = new Dictionary<Piece.PieceCategory, string>();
 
-            PieceTable currentTool = Player.m_localPlayer.m_buildPieces;
+            foreach (Piece.PieceCategory category in Enum.GetValues(typeof(Piece.PieceCategory)))
+                if ((int)category >= 0 && category != Piece.PieceCategory.Max)
+                    categories[category] = category.ToString();
 
-            foreach (var table in Resources.FindObjectsOfTypeAll<PieceTable>())
+            // Documentation must not switch the player's build tool or execute HUD updates for inactive tables.
+            foreach (PieceTable table in Resources.FindObjectsOfTypeAll<PieceTable>())
             {
-                if (!table)
+                if (table == null || table.m_categories == null)
                     continue;
 
-                Player.m_localPlayer.m_buildPieces = table;
-                Hud.instance?.LateUpdate();
-
-                int count = Mathf.Min(table.m_categories.Count, table.m_categoryLabels.Count);
-
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < table.m_categories.Count; i++)
                 {
-                    var category = table.m_categories[i];
-
-                    if (categories.ContainsKey(category))
+                    Piece.PieceCategory category = table.m_categories[i];
+                    if ((int)category < 0 || category == Piece.PieceCategory.Max)
                         continue;
 
-                    string label = table.m_categoryLabels[i];
+                    string label = table.m_categoryLabels != null && i < table.m_categoryLabels.Count
+                        ? table.m_categoryLabels[i]
+                        : null;
 
                     if (!string.IsNullOrWhiteSpace(label) && Localization.instance != null)
                         label = Localization.instance.Localize(label);
 
-                    if (string.IsNullOrWhiteSpace(label))
-                        label = Enum.GetName(typeof(Piece.PieceCategory), category);
-
-                    if (string.IsNullOrWhiteSpace(label))
-                        label = category.ToString();
-
-                    categories[category] = label;
+                    if (!string.IsNullOrWhiteSpace(label))
+                        categories[category] = label;
+                    else if (!categories.ContainsKey(category))
+                        categories[category] = category.ToString();
                 }
             }
-
-            Player.m_localPlayer.m_buildPieces = currentTool;
-            Hud.instance?.LateUpdate();
 
             foreach (var pair in categories.OrderBy(p => (int)p.Key))
                 sb.AppendLine($"* {(int)pair.Key} - {pair.Value}");
@@ -84,10 +77,7 @@ namespace BuildPiecesCustomized
             sb.AppendLine();
 
             sb.AppendLine("## category");
-            if (Player.m_localPlayer != null)
-                LogPieceCategories();
-            else
-                EnumToList(typeof(Piece.PieceCategory));
+            LogPieceCategories();
 
             sb.AppendLine();
             sb.AppendLine("## comfortGroup");

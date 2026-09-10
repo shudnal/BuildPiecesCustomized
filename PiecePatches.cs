@@ -12,6 +12,7 @@ namespace BuildPiecesCustomized
         public static void UpdatePiecesProperties()
         {
             GlobalPatches.UpdateProperties();
+            PieceTableCategories.RefreshRegisteredCategories();
 
             if (ZNetScene.instance)
                 instance.StartCoroutine(PatchPieces());
@@ -60,7 +61,7 @@ namespace BuildPiecesCustomized
             if (pieceData.ContainsKey(name))
             {
                 LogInfo($"Patching {piece.name}");
-                pieceData[name].PatchPiece(piece);
+                pieceData[name].PatchPiece(piece, validateCategory: true);
             }
 
             GlobalPatches.PatchGlobalProperties(piece, name);
@@ -77,9 +78,17 @@ namespace BuildPiecesCustomized
 
             yield return new WaitForFixedUpdate();
 
+            if (!modEnabled.Value || !ObjectDB.instance || !ZNetScene.instance)
+                yield break;
+
+            PieceTableCategories.RefreshRegisteredCategories();
+
             foreach (GameObject go in CustomPieceData.GetBuildPieces())
                 if (go != null && go.TryGetComponent(out Piece piece))
                     PatchPiece(piece);
+
+            // Refresh after the prefab categories have changed, not only before this coroutine starts.
+            Player.m_localPlayer?.UpdateAvailablePiecesList();
         }
 
         [HarmonyPatch(typeof(Piece), nameof(Piece.Awake))]
@@ -110,38 +119,36 @@ namespace BuildPiecesCustomized
         [HarmonyPatch(typeof(PieceTable), nameof(PieceTable.UpdateAvailable))]
         private static class PieceTable_UpdateAvailable_PieceDisabled
         {
-            [HarmonyPriority(Priority.First)]
-            private static void Prefix(PieceTable __instance, ref List<GameObject> __state)
+            [HarmonyPriority(Priority.Last)]
+            private static void Prefix(PieceTable __instance)
             {
-                if (!modEnabled.Value)
-                    return;
-
-                __state = __instance.m_pieces.ToList();
-                int removed = __instance.m_pieces.RemoveAll(GlobalPatches.IsPieceForceDisabled);
-                if (removed > 0)
-                    LogInfo($"Removed pieces {__instance.name}: {removed}/{__state.Count}");
-                else
-                    __state = null;
+                if (modEnabled.Value)
+                    PieceTableCategories.EnsureStorage(__instance);
             }
 
-            private static void Finalizer(PieceTable __instance, List<GameObject> __state)
+            [HarmonyPriority(Priority.Last)]
+            private static void Postfix(PieceTable __instance)
             {
                 if (!modEnabled.Value)
                     return;
 
-                if (__state != null)
-                {
-                    __instance.m_pieces.Clear();
-                    __instance.m_pieces.AddRange(__state);
-                    LogInfo($"Restored pieces {__instance.name}: {__instance.m_pieces.Count}");
-                }
+                // Keep the shared prefab registry intact. Valheim 1.0.7 builds all three availability views.
+                int removed = __instance.m_availablePieces.RemoveWhere(GlobalPatches.IsPieceForceDisabled);
+                __instance.m_enabledPieces.RemoveWhere(GlobalPatches.IsPieceForceDisabled);
+                foreach (List<Piece> category in __instance.m_availablePiecesByCategory)
+                    category.RemoveAll(GlobalPatches.IsPieceForceDisabled);
+
+                PieceTableCategories.EnsureStorage(__instance);
+
+                if (removed > 0)
+                    LogInfo($"Hidden pieces {__instance.name}: {removed}");
             }
         }
 
         public static class GlobalPatches
         {
             public const string allPiecesIdentifier = "AllPieces";
-            private static readonly string allPiecesListIdentifier = allPiecesIdentifier.ToLower();
+            private static readonly string allPiecesListIdentifier = allPiecesIdentifier.ToLowerInvariant();
 
             private static bool clipEverything;
             private static bool allowedInDungeons;
@@ -166,7 +173,7 @@ namespace BuildPiecesCustomized
 
             private static HashSet<string> ConfigToHashSet(string configString)
             {
-                return new HashSet<string>(configString.Split(',').Select(p => p.Trim().ToLower()).Where(p => !string.IsNullOrWhiteSpace(p)).ToList());
+                return new HashSet<string>(configString.Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)).ToList());
             }
 
             public static void UpdateProperties()
@@ -193,12 +200,14 @@ namespace BuildPiecesCustomized
                 noSupportWear = listNoSupportWear.Contains(allPiecesListIdentifier);
             }
 
-            public static bool IsPieceForceDisabled(Piece piece) => !piece.m_enabled && listDisabled.Contains(piece.name.ToLower());
-            public static bool IsPieceForceDisabled(GameObject gameObject) => gameObject.TryGetComponent(out Piece piece) && IsPieceForceDisabled(piece);
+            public static bool IsPieceForceDisabled(Piece piece) => piece != null && listDisabled != null &&
+                listDisabled.Contains(Utils.GetPrefabName(piece.gameObject).ToLowerInvariant());
+            public static bool IsPieceForceDisabled(GameObject gameObject) => gameObject != null &&
+                gameObject.TryGetComponent(out Piece piece) && IsPieceForceDisabled(piece);
 
             public static void PatchGlobalProperties(Piece piece, string pieceName)
             {
-                string name = pieceName.ToLower();
+                string name = pieceName.ToLowerInvariant();
 
                 if (clipEverything)
                     piece.m_clipEverything = true;
@@ -237,8 +246,8 @@ namespace BuildPiecesCustomized
                     piece.m_enabled = false;
                     piece.m_category = 0;
                 }
-                else if (pieceCategories.Value.TryGetValue(name, out int category) && category >= 0)
-                    piece.m_category = (Piece.PieceCategory)category;
+                else if (pieceCategories.Value.TryGetValue(name, out int category))
+                    PieceTableCategories.ApplyConfiguredCategory(piece, (Piece.PieceCategory)category);
 
                 WearNTear wnt = GetWearNTearComponent(piece);
                 if (wnt != null)

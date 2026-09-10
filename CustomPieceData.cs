@@ -68,7 +68,7 @@ namespace BuildPiecesCustomized
 
         public List<string>? resources;
 
-        internal void PatchPiece(Piece piece)
+        internal void PatchPiece(Piece piece, bool validateCategory = false)
         {
             if (enabled.HasValue)
                 piece.m_enabled = enabled.Value;
@@ -80,7 +80,12 @@ namespace BuildPiecesCustomized
                 piece.m_description = description;
 
             if (category.HasValue)
-                piece.m_category = category.Value;
+            {
+                if (validateCategory)
+                    PieceTableCategories.ApplyConfiguredCategory(piece, category.Value);
+                else
+                    piece.m_category = category.Value;
+            }
 
             if (comfort.HasValue)
                 piece.m_comfort = comfort.Value;

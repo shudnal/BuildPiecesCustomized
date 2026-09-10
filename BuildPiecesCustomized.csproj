@@ -41,6 +41,7 @@
     <Compile Include="CustomPieceData.cs" />
     <Compile Include="DocGen.cs" />
     <Compile Include="PiecePatches.cs" />
+    <Compile Include="PieceTableCategories.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

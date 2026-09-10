@@ -80,20 +80,21 @@ namespace BuildPiecesCustomized
 
         private void Awake()
         {
-            harmony.PatchAll();
-
             instance = this;
 
             pluginDirectory = new DirectoryInfo(Assembly.GetExecutingAssembly().Location).Parent;
             configDirectory = new DirectoryInfo(Path.Combine(Paths.ConfigPath, pluginID));
 
             ConfigInit();
+            PiecePatches.GlobalPatches.UpdateProperties();
+            PieceTableCategories.RefreshRegisteredCategories();
 
             _ = configSync.AddLockingConfigEntry(configLocked);
 
             configsJSON.ValueChanged += new Action(LoadConfigs);
             pieceCategories.ValueChanged += new Action(PiecePatches.UpdatePiecesProperties);
 
+            harmony.PatchAll();
             Game.isModded = true;
         }
 

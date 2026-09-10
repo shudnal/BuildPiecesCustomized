@@ -102,6 +102,18 @@ If you place that files on the server then its settings will be shared from the 
 
 If you want to undo changes delete the file.
 
+## Piece categories in Valheim 1.0.7
+
+Built-in category IDs are `0` Misc, `1` Crafting, `2` BuildingWorkbench, `3` BuildingStonecutter,
+`4` Furniture, `5` DeepNorth, `6` Feasts, `7` Food, and `8` Meads. `100` (All) is a special
+broadcast category, not the index of an additional tab. `9` (Max) is reserved and must not be
+assigned to a piece in an individual file or in `Piece categories.json` / YAML.
+
+Custom category IDs are accepted only after an installed category provider registers them.
+An unknown, negative, or reserved category is ignored with a warning; the piece keeps its
+existing category. Assigning an arbitrary integer does not create a custom category.
+Use the generated documentation to find the categories available in the current installation.
+
 ## Properties meaning
 
 Most properties are self-explanatory but some may need some more explanation.
