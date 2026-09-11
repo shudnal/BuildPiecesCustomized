@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using static BuildPiecesCustomized.BuildPiecesCustomized;
+using static Version;
 
 #nullable enable
 
@@ -68,7 +69,90 @@ namespace BuildPiecesCustomized
 
         public List<string>? resources;
 
-        internal void PatchPiece(Piece piece, bool validateCategory = false)
+        // Parsed configuration is immutable until the source strings change. Keep only names
+        // here; resolve ItemDrop against the current ObjectDB so prefab replacement stays live.
+        [NonSerialized, JsonIgnore]
+        private string[]? parsedResourceSource;
+        [NonSerialized, JsonIgnore]
+        private ResourceSpec[] parsedResources = Array.Empty<ResourceSpec>();
+        [NonSerialized, JsonIgnore]
+        private string[]? parsedDamageSource;
+        [NonSerialized, JsonIgnore]
+        private HitData.DamageModPair[] parsedDamageModifiers = Array.Empty<HitData.DamageModPair>();
+
+        private readonly struct ResourceSpec
+        {
+            internal readonly string Name;
+            internal readonly int Amount;
+            internal readonly bool Recover;
+
+            internal ResourceSpec(string name, int amount, bool recover)
+            {
+                Name = name;
+                Amount = amount;
+                Recover = recover;
+            }
+        }
+
+        private static bool Matches(List<string> source, string[]? cached)
+        {
+            if (cached == null || source.Count != cached.Length)
+                return false;
+            for (int i = 0; i < cached.Length; i++)
+                if (!string.Equals(source[i], cached[i], StringComparison.Ordinal))
+                    return false;
+            return true;
+        }
+
+        private ResourceSpec[] GetResourceSpecs()
+        {
+            if (resources == null)
+                return Array.Empty<ResourceSpec>();
+            if (Matches(resources, parsedResourceSource))
+                return parsedResources;
+
+            var result = new List<ResourceSpec>(resources.Count);
+            foreach (string entry in resources)
+            {
+                string[] parts = entry?.Split(':') ?? Array.Empty<string>();
+                int amount = 1;
+                bool recover = true;
+                if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0])
+                    || (parts.Length > 1 && (!int.TryParse(parts[1], out amount) || amount < 0))
+                    || (parts.Length > 2 && !bool.TryParse(parts[2], out recover)))
+                {
+                    LogWarning($"Invalid resource entry for {prefabName}: {entry}");
+                    continue;
+                }
+                result.Add(new ResourceSpec(parts[0], amount, recover));
+            }
+            parsedResources = result.ToArray();
+            parsedResourceSource = resources.ToArray();
+            return parsedResources;
+        }
+
+        private HitData.DamageModPair[] GetDamageModifierSpecs()
+        {
+            if (damageModifiers == null)
+                return Array.Empty<HitData.DamageModPair>();
+            if (Matches(damageModifiers, parsedDamageSource))
+                return parsedDamageModifiers;
+
+            var result = new List<HitData.DamageModPair>(damageModifiers.Count);
+            foreach (string entry in damageModifiers)
+            {
+                string[] parts = entry?.Split(':') ?? Array.Empty<string>();
+                if (parts.Length != 2 || !Enum.TryParse(parts[0], out HitData.DamageType type)
+                    || !Enum.TryParse(parts[1], out HitData.DamageModifier modifier))
+                    continue;
+                result.Add(new HitData.DamageModPair { m_type = type, m_modifier = modifier });
+            }
+            parsedDamageModifiers = result.ToArray();
+            parsedDamageSource = damageModifiers.ToArray();
+            return parsedDamageModifiers;
+        }
+
+        internal void PatchPiece(Piece piece, bool validateCategory = false, bool skipResources = false)
         {
             if (enabled.HasValue)
                 piece.m_enabled = enabled.Value;
@@ -168,30 +252,30 @@ namespace BuildPiecesCustomized
             if (randomTarget.HasValue)
                 piece.m_randomTarget = randomTarget.Value;
 
-            if (resources != null)
+            if (resources != null && !skipResources)
             {
-                var reqs = new List<Piece.Requirement>();
-
-                foreach (string modString in resources)
+                ResourceSpec[] specs = GetResourceSpecs();
+                var requirements = new Piece.Requirement[specs.Length];
+                int count = 0;
+                for (int i = 0; i < specs.Length; i++)
                 {
-                    string[] parts = modString.Split(':');
-                    if (parts.Length < 1)
-                        continue;
-
-                    var item = ObjectDB.instance?.GetItemPrefab(parts[0])?.GetComponent<ItemDrop>();
-
+                    ResourceSpec spec = specs[i];
+                    var item = ObjectDB.instance?.GetItemPrefab(spec.Name)?.GetComponent<ItemDrop>();
                     if (item == null)
                         continue;
 
-                    reqs.Add(new Piece.Requirement
+                    // Requirements remain private to each piece; never share mutable objects
+                    // between instances or with a prefab modified by another plugin.
+                    requirements[count++] = new Piece.Requirement
                     {
                         m_resItem = item,
-                        m_amount = parts.Length > 1 ? int.Parse(parts[1]) : 1,
-                        m_recover = parts.Length < 3 || bool.Parse(parts[2])
-                    });
+                        m_amount = spec.Amount,
+                        m_recover = spec.Recover
+                    };
                 }
-
-                piece.m_resources = reqs.ToArray();
+                if (count != requirements.Length)
+                    Array.Resize(ref requirements, count);
+                piece.m_resources = requirements;
             }
 
             if (GetWearNTearComponent(piece) is WearNTear wnt)
@@ -237,17 +321,10 @@ namespace BuildPiecesCustomized
 
                 if (damageModifiers != null)
                 {
-                    foreach (string modString in damageModifiers)
+                    foreach (HitData.DamageModPair pair in GetDamageModifierSpecs())
                     {
-                        var parts = modString.Split(':');
-                        if (parts.Length != 2)
-                            continue;
-
-                        if (!Enum.TryParse(parts[0], out HitData.DamageType type))
-                            continue;
-
-                        if (!Enum.TryParse(parts[1], out HitData.DamageModifier mod))
-                            continue;
+                        HitData.DamageType type = pair.m_type;
+                        HitData.DamageModifier mod = pair.m_modifier;
 
                         ref var dmg = ref wnt.m_damages;
 

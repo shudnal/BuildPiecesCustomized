@@ -1,3 +1,8 @@
+# 1.2.3
+* Cached parsed resource and damage-modifier configuration while resolving resources against the current ObjectDB.
+* Avoided constructing default requirements that are immediately replaced, without sharing mutable requirements between pieces.
+* Reduced repeated prefab fallback lookups and temporary allocations in global piece rules.
+
 # 1.2.2
 * Fix category storage and selection array bounds when refreshing building tools in Valheim 1.0.7.
 * Filter disabled pieces from availability views without removing prefabs from the shared piece registry.

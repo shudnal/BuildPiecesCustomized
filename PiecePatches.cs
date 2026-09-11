@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,29 +40,69 @@ namespace BuildPiecesCustomized
             }
         }
 
+        private static ZNetScene fallbackScene;
+        private static readonly Dictionary<string, Piece> fallbackPieces = new Dictionary<string, Piece>(StringComparer.Ordinal);
+
+        private static Piece FindDefaultPiece(string name)
+        {
+            ZNetScene scene = ZNetScene.instance;
+            if (fallbackScene != scene)
+            {
+                fallbackScene = scene;
+                fallbackPieces.Clear();
+            }
+
+            GameObject prefab = scene.GetPrefab(name);
+            if (prefab)
+                return prefab.GetComponent<Piece>();
+            if (fallbackPieces.TryGetValue(name, out Piece cached) && cached)
+                return cached;
+
+            // Keep positive results only. A late-registered prefab must not be hidden by a
+            // cached miss. Warm other names encountered before the requested match, without
+            // retaining an unbounded collection or walking past an already found prefab.
+            Piece result = null;
+            foreach (Piece candidate in Resources.FindObjectsOfTypeAll<Piece>())
+            {
+                if (!candidate)
+                    continue;
+                string candidateName = candidate.name;
+                if (fallbackPieces.Count < 4096 && (!fallbackPieces.TryGetValue(candidateName, out Piece existing) || !existing))
+                    fallbackPieces[candidateName] = candidate;
+                if (candidateName == name)
+                {
+                    result = candidate;
+                    break;
+                }
+            }
+            return result;
+        }
+
         private static void PatchPiece(Piece piece)
         {
             if (piece == null || !ZNetScene.instance)
                 return;
 
             string name = Utils.GetPrefabName(piece.gameObject);
-            if (!defaultPieceData.ContainsKey(name))
+            if (!defaultPieceData.TryGetValue(name, out CustomPieceData defaults))
             {
-                GameObject prefab = ZNetScene.instance.GetPrefab(name);
-
-                Piece defaultPiece = prefab == null ? Resources.FindObjectsOfTypeAll<Piece>().FirstOrDefault(p => p.name == name) : prefab.GetComponent<Piece>();
-                if (!(bool)defaultPiece)
+                Piece defaultPiece = FindDefaultPiece(name);
+                if (!defaultPiece)
                     return;
-
-                defaultPieceData[name] = new CustomPieceData(defaultPiece);
+                defaults = new CustomPieceData(defaultPiece);
+                defaultPieceData[name] = defaults;
             }
 
-            defaultPieceData[name].PatchPiece(piece);
+            pieceData.TryGetValue(name, out CustomPieceData configured);
+            // The configured resource list replaces the full default list, so do not build
+            // and immediately discard a second set of requirements on every Piece.Awake.
+            defaults.PatchPiece(piece, skipResources: configured?.resources != null);
 
-            if (pieceData.ContainsKey(name))
+            if (configured != null)
             {
-                LogInfo($"Patching {piece.name}");
-                pieceData[name].PatchPiece(piece, validateCategory: true);
+                if (loggingEnabled.Value)
+                    LogInfo($"Patching {piece.name}");
+                configured.PatchPiece(piece, validateCategory: true);
             }
 
             GlobalPatches.PatchGlobalProperties(piece, name);
@@ -89,6 +130,16 @@ namespace BuildPiecesCustomized
 
             // Refresh after the prefab categories have changed, not only before this coroutine starts.
             Player.m_localPlayer?.UpdateAvailablePiecesList();
+        }
+
+        [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.OnDestroy))]
+        private static class ZNetScene_OnDestroy_ClearFallbackPieces
+        {
+            private static void Postfix()
+            {
+                fallbackPieces.Clear();
+                fallbackScene = null;
+            }
         }
 
         [HarmonyPatch(typeof(Piece), nameof(Piece.Awake))]
@@ -173,7 +224,7 @@ namespace BuildPiecesCustomized
 
             private static HashSet<string> ConfigToHashSet(string configString)
             {
-                return new HashSet<string>(configString.Split(',').Select(p => p.Trim().ToLowerInvariant()).Where(p => !string.IsNullOrWhiteSpace(p)).ToList());
+                return new HashSet<string>(configString.Split(',').Select(p => p.Trim()).Where(p => !string.IsNullOrWhiteSpace(p)), StringComparer.OrdinalIgnoreCase);
             }
 
             public static void UpdateProperties()
@@ -201,19 +252,20 @@ namespace BuildPiecesCustomized
             }
 
             public static bool IsPieceForceDisabled(Piece piece) => piece != null && listDisabled != null &&
-                listDisabled.Contains(Utils.GetPrefabName(piece.gameObject).ToLowerInvariant());
+                listDisabled.Count > 0 && listDisabled.Contains(Utils.GetPrefabName(piece.gameObject));
             public static bool IsPieceForceDisabled(GameObject gameObject) => gameObject != null &&
                 gameObject.TryGetComponent(out Piece piece) && IsPieceForceDisabled(piece);
 
             public static void PatchGlobalProperties(Piece piece, string pieceName)
             {
-                string name = pieceName.ToLowerInvariant();
+                string name = pieceName;
 
                 if (clipEverything)
                     piece.m_clipEverything = true;
                 else if (listClipEverything.Contains(name))
                 {
-                    LogInfo($"Patching {pieceName} clip everything");
+                    if (loggingEnabled.Value)
+                        LogInfo($"Patching {pieceName} clip everything");
                     piece.m_clipEverything = true;
                 }
 
@@ -221,7 +273,8 @@ namespace BuildPiecesCustomized
                     piece.m_allowedInDungeons = true;
                 else if (listAllowedInDungeons.Contains(name))
                 {
-                    LogInfo($"Patching {pieceName} allowed in dungeons");
+                    if (loggingEnabled.Value)
+                        LogInfo($"Patching {pieceName} allowed in dungeons");
                     piece.m_allowedInDungeons = true;
                 }
 
@@ -229,7 +282,8 @@ namespace BuildPiecesCustomized
                     piece.m_repairPiece = true;
                 else if (listRepairPiece.Contains(name))
                 {
-                    LogInfo($"Patching {pieceName} can be repaired");
+                    if (loggingEnabled.Value)
+                        LogInfo($"Patching {pieceName} can be repaired");
                     piece.m_repairPiece = true;
                 }
 
@@ -237,7 +291,8 @@ namespace BuildPiecesCustomized
                     piece.m_canBeRemoved = true;
                 else if (listCanBeRemoved.Contains(name))
                 {
-                    LogInfo($"Patching {pieceName} can be removed");
+                    if (loggingEnabled.Value)
+                        LogInfo($"Patching {pieceName} can be removed");
                     piece.m_canBeRemoved = true;
                 }
 
@@ -256,7 +311,8 @@ namespace BuildPiecesCustomized
                         wnt.m_ashDamageImmune = true;
                     else if (listAshDamageImmune.Contains(name))
                     {
-                        LogInfo($"Patching {pieceName} ash and lava immune");
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} ash and lava immune");
                         wnt.m_ashDamageImmune = true;
                     }
 
@@ -264,7 +320,8 @@ namespace BuildPiecesCustomized
                         wnt.m_noRoofWear = false;
                     else if (listNoRoofWear.Contains(name))
                     {
-                        LogInfo($"Patching {pieceName} no water damage");
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} no water damage");
                         wnt.m_noRoofWear = false;
                     }
 
@@ -272,7 +329,8 @@ namespace BuildPiecesCustomized
                         wnt.m_noSupportWear = false;
                     else if (listNoSupportWear.Contains(name))
                     {
-                        LogInfo($"Patching {pieceName} no structural integrity");
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} no structural integrity");
                         wnt.m_noSupportWear = false;
                     }
 
@@ -280,7 +338,8 @@ namespace BuildPiecesCustomized
                         wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "leaky").Do(col => col.tag = "roof");
                     else if (listIsRoof.Contains(name))
                     {
-                        LogInfo($"Patching {pieceName} leaky -> roof");
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} leaky -> roof");
                         wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "leaky").Do(col => col.tag = "roof");
                     }
 
@@ -288,7 +347,8 @@ namespace BuildPiecesCustomized
                         wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "roof").Do(col => col.tag = "leaky");
                     else if (listIsLeaky.Contains(name))
                     {
-                        LogInfo($"Patching {pieceName} roof -> leaky");
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} roof -> leaky");
                         wnt.transform.root.GetComponentsInChildren<Collider>(includeInactive: true).Where(col => col.tag == "roof").Do(col => col.tag = "leaky");
                     }
                 }
