@@ -1,4 +1,4 @@
-﻿# BuildPiecesCustomized
+# BuildPiecesCustomized
 
 Customize individual Valheim build pieces, apply common properties globally, and adjust structural material properties.
 
