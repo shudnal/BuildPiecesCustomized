@@ -1,3 +1,14 @@
+# 1.3.0
+* Replaced legacy piece category reassignment with Valheim 1.0 Hammer usage tag customization.
+* Added `usageTags` to individual piece files with full-replacement semantics and support for clearing all tags with an empty list.
+* Added `Piece usage tags.yaml` / JSON bulk configuration with both `pieces` (`prefab -> tags`) and `tags` (`tag -> prefabs`) sections.
+* Made bulk usage-tag configuration override individual piece `usageTags`, with tag-group additions applied after per-piece replacements.
+* Restricted usage-tag configuration to built-in Valheim `Piece.UsageTagFlags` names and reject invalid values atomically.
+* Updated generated documentation with supported Hammer tags, localized display names, bulk-file examples, and current usage tags for every piece.
+* Refresh the open Valheim build UI when usage tags change.
+* Removed legacy `Piece categories` configuration and category storage compatibility patches.
+* Removed remaining Nexus packaging files and references.
+
 # 1.2.3
 * Cached parsed resource and damage-modifier configuration while resolving resources against the current ObjectDB.
 * Avoided constructing default requirements that are immediately replaced, without sharing mutable requirements between pieces.

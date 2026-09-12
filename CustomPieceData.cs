@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using YamlDotNet.Serialization;
 using static BuildPiecesCustomized.BuildPiecesCustomized;
 using static Version;
 
@@ -21,7 +22,7 @@ namespace BuildPiecesCustomized
         public string? description;
 
         public bool? enabled;
-        public Piece.PieceCategory? category;
+        public List<string>? usageTags;
         public Piece.ComfortGroup? comfortGroup;
         public int? comfort;
         public bool? groundOnly;
@@ -68,6 +69,16 @@ namespace BuildPiecesCustomized
         public bool? triggerPrivateArea;
 
         public List<string>? resources;
+
+        [JsonProperty("__usageTagsAdditions", NullValueHandling = NullValueHandling.Ignore), YamlIgnore]
+        internal List<string>? usageTagsAdditions;
+
+        [NonSerialized, JsonIgnore, YamlIgnore]
+        private Piece.UsageTagFlags? capturedUsageTags;
+        [NonSerialized, JsonIgnore, YamlIgnore]
+        private Piece.UsageTagFlags? parsedUsageTags;
+        [NonSerialized, JsonIgnore, YamlIgnore]
+        private Piece.UsageTagFlags parsedUsageTagAdditions;
 
         // Parsed configuration is immutable until the source strings change. Keep only names
         // here; resolve ItemDrop against the current ObjectDB so prefab replacement stays live.
@@ -152,7 +163,7 @@ namespace BuildPiecesCustomized
             return parsedDamageModifiers;
         }
 
-        internal void PatchPiece(Piece piece, bool validateCategory = false, bool skipResources = false)
+        internal void PatchPiece(Piece piece, bool skipResources = false)
         {
             if (enabled.HasValue)
                 piece.m_enabled = enabled.Value;
@@ -163,13 +174,13 @@ namespace BuildPiecesCustomized
             if (description != null)
                 piece.m_description = description;
 
-            if (category.HasValue)
-            {
-                if (validateCategory)
-                    PieceTableCategories.ApplyConfiguredCategory(piece, category.Value);
-                else
-                    piece.m_category = category.Value;
-            }
+            if (capturedUsageTags.HasValue)
+                piece.m_usage = capturedUsageTags.Value;
+            else if (parsedUsageTags.HasValue)
+                piece.m_usage = parsedUsageTags.Value;
+
+            if (parsedUsageTagAdditions != 0)
+                piece.m_usage |= parsedUsageTagAdditions;
 
             if (comfort.HasValue)
                 piece.m_comfort = comfort.Value;
@@ -346,6 +357,40 @@ namespace BuildPiecesCustomized
             }
         }
 
+        internal void PrepareUsageTags(string sourceName)
+        {
+            parsedUsageTags = null;
+            parsedUsageTagAdditions = 0;
+
+            if (usageTags != null)
+            {
+                if (PieceUsageTags.TryParseTags(usageTags, out Piece.UsageTagFlags usage, out List<string> canonicalNames, out string invalidValue))
+                {
+                    usageTags = canonicalNames;
+                    parsedUsageTags = usage;
+                }
+                else
+                {
+                    LogWarning($"Invalid usage tag '{invalidValue}' in '{sourceName}'. The configured usageTags value will be ignored.");
+                    usageTags = null;
+                }
+            }
+
+            if (usageTagsAdditions != null)
+            {
+                if (PieceUsageTags.TryParseTags(usageTagsAdditions, out Piece.UsageTagFlags additions, out List<string> canonicalNames, out string invalidValue))
+                {
+                    usageTagsAdditions = canonicalNames;
+                    parsedUsageTagAdditions = additions;
+                }
+                else
+                {
+                    LogWarning($"Invalid usage tag '{invalidValue}' in the bulk usage tag override for '{sourceName}'. The tag additions will be ignored.");
+                    usageTagsAdditions = null;
+                }
+            }
+        }
+
         internal void SaveToDirectory(string directory)
         {
             Directory.CreateDirectory(directory);
@@ -366,7 +411,8 @@ namespace BuildPiecesCustomized
             enabled = piece.m_enabled;
             name = piece.m_name;
             description = piece.m_description;
-            category = piece.m_category;
+            capturedUsageTags = piece.m_usage;
+            usageTags = PieceUsageTags.HasUnsupportedBits(piece.m_usage) ? null : PieceUsageTags.GetNames(piece.m_usage);
             comfortGroup = piece.m_comfortGroup;
             comfort = piece.m_comfort;
             groundOnly = piece.m_groundOnly;

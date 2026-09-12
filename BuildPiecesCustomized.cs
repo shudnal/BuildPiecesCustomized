@@ -25,7 +25,7 @@ namespace BuildPiecesCustomized
     {
         public const string pluginID = "shudnal.BuildPiecesCustomized";
         public const string pluginName = "Build Pieces Customized";
-        public const string pluginVersion = "1.2.3";
+        public const string pluginVersion = "1.3.0";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -55,7 +55,6 @@ namespace BuildPiecesCustomized
         internal static BuildPiecesCustomized instance;
 
         internal static readonly CustomSyncedValue<Dictionary<string, string>> configsJSON = new CustomSyncedValue<Dictionary<string, string>>(configSync, "JSON configs", new Dictionary<string, string>());
-        internal static readonly CustomSyncedValue<Dictionary<string, int>> pieceCategories = new CustomSyncedValue<Dictionary<string, int>>(configSync, "Pieces categories", new Dictionary<string, int>());
 
         internal static readonly Dictionary<string, CustomPieceData> pieceData = new Dictionary<string, CustomPieceData>();
         internal static readonly Dictionary<string, CraftingStation> craftingStations = new Dictionary<string, CraftingStation>();
@@ -87,12 +86,10 @@ namespace BuildPiecesCustomized
 
             ConfigInit();
             PiecePatches.GlobalPatches.UpdateProperties();
-            PieceTableCategories.RefreshRegisteredCategories();
 
             _ = configSync.AddLockingConfigEntry(configLocked);
 
             configsJSON.ValueChanged += new Action(LoadConfigs);
-            pieceCategories.ValueChanged += new Action(PiecePatches.UpdatePiecesProperties);
 
             harmony.PatchAll();
             Game.isModded = true;
@@ -264,65 +261,57 @@ namespace BuildPiecesCustomized
 
         private static void ReadConfigs(object sender, FileSystemEventArgs eargs)
         {
-            Dictionary<string, string> localConfigsJSON = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, int> localCategories = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            List<FileInfo> configFiles = new List<FileInfo>();
+            var localConfigs = new Dictionary<string, CustomPieceData>(StringComparer.OrdinalIgnoreCase);
+            PieceUsageTags.ConfigFile usageTagConfig = null;
+            var configFiles = new List<FileInfo>();
 
             if (pluginDirectory.Exists)
-            {
-                configFiles.AddRange(pluginDirectory.GetFiles("*.json", SearchOption.AllDirectories));
-                configFiles.AddRange(pluginDirectory.GetFiles("*.yaml", SearchOption.AllDirectories));
-                configFiles.AddRange(pluginDirectory.GetFiles("*.yml", SearchOption.AllDirectories));
-            }
+                configFiles.AddRange(GetConfigFiles(pluginDirectory));
 
             if (configDirectory.Exists)
-            {
-                configFiles.AddRange(configDirectory.GetFiles("*.json", SearchOption.AllDirectories));
-                configFiles.AddRange(configDirectory.GetFiles("*.yaml", SearchOption.AllDirectories));
-                configFiles.AddRange(configDirectory.GetFiles("*.yml", SearchOption.AllDirectories));
-            }
+                configFiles.AddRange(GetConfigFiles(configDirectory));
 
             foreach (FileInfo file in configFiles)
             {
-                if (file.Name == "manifest.json")
+                if (string.Equals(file.Name, "manifest.json", StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 LogInfo($"Found {file.FullName}");
 
                 try
                 {
-                    using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    using StreamReader reader = new StreamReader(fs);
-                    string content = reader.ReadToEnd();
-                    reader.Close();
-                    fs.Dispose();
+                    string content;
+                    using (FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (StreamReader reader = new StreamReader(fs))
+                        content = reader.ReadToEnd();
 
                     string filename = Path.GetFileNameWithoutExtension(file.Name);
+                    bool isJson = string.Equals(file.Extension, ".json", StringComparison.OrdinalIgnoreCase);
 
-                    if (filename == "Piece categories")
+                    if (string.Equals(filename, "Piece categories", StringComparison.OrdinalIgnoreCase))
                     {
-                        Dictionary<int, List<string>> categories = (file.Extension != ".json" ? 
-                                                            YamlDeserializer.Deserialize<Dictionary<int, List<string>>>(content) : 
-                                                            JsonConvert.DeserializeObject<Dictionary<int, List<string>>>(content));
-
-                        if (categories != null)
-                            foreach (KeyValuePair<int, List<string>> category in categories)
-                            {
-                                if (category.Value == null)
-                                    continue;
-                                foreach (string pieceName in category.Value)
-                                    if (!string.IsNullOrWhiteSpace(pieceName))
-                                        localCategories[pieceName.Trim().ToLowerInvariant()] = category.Key;
-                            }
+                        LogWarning($"Ignoring obsolete piece category configuration file '{file.FullName}'. Use '{PieceUsageTags.ConfigFileName}.yaml' or JSON instead.");
+                        continue;
                     }
-                    else
+
+                    if (string.Equals(filename, PieceUsageTags.ConfigFileName, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (file.Extension != ".json")
-                            content = JsonConvert.SerializeObject(YamlDeserializer.Deserialize<CustomPieceData>(content));
+                        if (usageTagConfig != null)
+                            LogWarning($"Multiple '{PieceUsageTags.ConfigFileName}' files found. Using the last file by configuration search priority: '{file.FullName}'.");
 
-                        localConfigsJSON[filename] = content;
+                        usageTagConfig = null;
+                        usageTagConfig = isJson
+                            ? JsonConvert.DeserializeObject<PieceUsageTags.ConfigFile>(content)
+                            : YamlDeserializer.Deserialize<PieceUsageTags.ConfigFile>(content);
+                        continue;
                     }
+
+                    CustomPieceData data = isJson
+                        ? JsonConvert.DeserializeObject<CustomPieceData>(content)
+                        : YamlDeserializer.Deserialize<CustomPieceData>(content);
+
+                    if (data != null)
+                        localConfigs[filename] = data;
                 }
                 catch (Exception e)
                 {
@@ -330,8 +319,92 @@ namespace BuildPiecesCustomized
                 }
             }
 
-            pieceCategories.AssignLocalValue(localCategories);
+            ApplyBulkUsageTagReplacements(localConfigs, usageTagConfig);
+            ApplyBulkUsageTagAdditions(localConfigs, usageTagConfig);
+
+            var localConfigsJSON = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, CustomPieceData> config in localConfigs)
+                localConfigsJSON[config.Key] = JsonConvert.SerializeObject(config.Value);
+
             configsJSON.AssignLocalValue(localConfigsJSON);
+        }
+
+        private static IEnumerable<FileInfo> GetConfigFiles(DirectoryInfo directory)
+        {
+            return directory.GetFiles("*.json", SearchOption.AllDirectories)
+                .Concat(directory.GetFiles("*.yaml", SearchOption.AllDirectories))
+                .Concat(directory.GetFiles("*.yml", SearchOption.AllDirectories))
+                .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static CustomPieceData GetOrCreatePieceConfig(Dictionary<string, CustomPieceData> configs, string pieceName)
+        {
+            if (!configs.TryGetValue(pieceName, out CustomPieceData data))
+            {
+                data = new CustomPieceData { prefabName = pieceName };
+                configs[pieceName] = data;
+            }
+
+            return data;
+        }
+
+        private static void ApplyBulkUsageTagReplacements(Dictionary<string, CustomPieceData> configs, PieceUsageTags.ConfigFile usageTagConfig)
+        {
+            if (usageTagConfig?.Pieces == null)
+                return;
+
+            foreach (KeyValuePair<string, List<string>> entry in usageTagConfig.Pieces)
+            {
+                string pieceName = entry.Key?.Trim();
+                if (string.IsNullOrWhiteSpace(pieceName))
+                    continue;
+                if (entry.Value == null)
+                {
+                    LogWarning($"Ignoring null usage tag list for piece '{pieceName}'. Use an empty list to clear all usage tags.");
+                    continue;
+                }
+
+                if (!PieceUsageTags.TryParseTags(entry.Value, out _, out List<string> canonicalNames, out string invalidValue))
+                {
+                    LogWarning($"Ignoring usage tag override for piece '{pieceName}' because '{invalidValue}' is not a supported built-in usage tag.");
+                    continue;
+                }
+
+                GetOrCreatePieceConfig(configs, pieceName).usageTags = canonicalNames;
+            }
+        }
+
+        private static void ApplyBulkUsageTagAdditions(Dictionary<string, CustomPieceData> configs, PieceUsageTags.ConfigFile usageTagConfig)
+        {
+            if (usageTagConfig?.Tags == null)
+                return;
+
+            foreach (KeyValuePair<string, List<string>> entry in usageTagConfig.Tags)
+            {
+                if (!PieceUsageTags.TryParseTag(entry.Key, out _, out string canonicalName))
+                {
+                    LogWarning($"Ignoring unsupported built-in usage tag '{entry.Key}' in '{PieceUsageTags.ConfigFileName}'.");
+                    continue;
+                }
+                if (entry.Value == null)
+                {
+                    LogWarning($"Ignoring null piece list for usage tag '{canonicalName}'.");
+                    continue;
+                }
+
+                foreach (string configuredPieceName in entry.Value)
+                {
+                    string pieceName = configuredPieceName?.Trim();
+                    if (string.IsNullOrWhiteSpace(pieceName))
+                        continue;
+
+                    CustomPieceData data = GetOrCreatePieceConfig(configs, pieceName);
+                    if (data.usageTagsAdditions == null)
+                        data.usageTagsAdditions = new List<string>();
+                    if (!data.usageTagsAdditions.Any(tag => string.Equals(tag, canonicalName, StringComparison.OrdinalIgnoreCase)))
+                        data.usageTagsAdditions.Add(canonicalName);
+                }
+            }
         }
 
         private static void LoadConfigs()
@@ -344,7 +417,10 @@ namespace BuildPiecesCustomized
                 {
                     CustomPieceData data = JsonConvert.DeserializeObject<CustomPieceData>(configJSON.Value);
                     if (data != null)
+                    {
+                        data.PrepareUsageTags(configJSON.Key);
                         pieceData[configJSON.Key] = data;
+                    }
                 }
                 catch (Exception e)
                 {

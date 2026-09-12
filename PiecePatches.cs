@@ -13,14 +13,26 @@ namespace BuildPiecesCustomized
         public static void UpdatePiecesProperties()
         {
             GlobalPatches.UpdateProperties();
-            PieceTableCategories.RefreshRegisteredCategories();
 
             if (ZNetScene.instance)
                 instance.StartCoroutine(PatchPieces());
 
             Piece.s_allPieces?.Do(piece => PatchPiece(piece));
 
-            Player.m_localPlayer?.UpdateAvailablePiecesList();
+            RefreshBuildUi();
+        }
+
+        private static void RefreshBuildUi()
+        {
+            Player player = Player.m_localPlayer;
+            if (player == null)
+                return;
+
+            player.UpdateAvailablePiecesList();
+
+            BuildUi buildUi = Hud.instance?.m_buildUi;
+            if (buildUi != null && buildUi.gameObject.activeSelf)
+                buildUi.UpdateTagButtons(refreshOnly: true);
         }
 
         private static void FillCraftingStations()
@@ -102,7 +114,7 @@ namespace BuildPiecesCustomized
             {
                 if (loggingEnabled.Value)
                     LogInfo($"Patching {piece.name}");
-                configured.PatchPiece(piece, validateCategory: true);
+                configured.PatchPiece(piece);
             }
 
             GlobalPatches.PatchGlobalProperties(piece, name);
@@ -122,14 +134,13 @@ namespace BuildPiecesCustomized
             if (!modEnabled.Value || !ObjectDB.instance || !ZNetScene.instance)
                 yield break;
 
-            PieceTableCategories.RefreshRegisteredCategories();
-
             foreach (GameObject go in CustomPieceData.GetBuildPieces())
                 if (go != null && go.TryGetComponent(out Piece piece))
                     PatchPiece(piece);
 
-            // Refresh after the prefab categories have changed, not only before this coroutine starts.
-            Player.m_localPlayer?.UpdateAvailablePiecesList();
+            // Refresh after the prefab usage tags have changed, not only before this coroutine starts.
+            RefreshBuildUi();
+            DocGen.GenerateDocumentationFile();
         }
 
         [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.OnDestroy))]
@@ -171,25 +182,16 @@ namespace BuildPiecesCustomized
         private static class PieceTable_UpdateAvailable_PieceDisabled
         {
             [HarmonyPriority(Priority.Last)]
-            private static void Prefix(PieceTable __instance)
-            {
-                if (modEnabled.Value)
-                    PieceTableCategories.EnsureStorage(__instance);
-            }
-
-            [HarmonyPriority(Priority.Last)]
             private static void Postfix(PieceTable __instance)
             {
                 if (!modEnabled.Value)
                     return;
 
-                // Keep the shared prefab registry intact. Valheim 1.0.7 builds all three availability views.
+                // Keep the shared prefab registry intact while filtering all availability views.
                 int removed = __instance.m_availablePieces.RemoveWhere(GlobalPatches.IsPieceForceDisabled);
                 __instance.m_enabledPieces.RemoveWhere(GlobalPatches.IsPieceForceDisabled);
                 foreach (List<Piece> category in __instance.m_availablePiecesByCategory)
                     category.RemoveAll(GlobalPatches.IsPieceForceDisabled);
-
-                PieceTableCategories.EnsureStorage(__instance);
 
                 if (removed > 0)
                     LogInfo($"Hidden pieces {__instance.name}: {removed}");
@@ -297,12 +299,7 @@ namespace BuildPiecesCustomized
                 }
 
                 if (listDisabled.Contains(name))
-                {
                     piece.m_enabled = false;
-                    piece.m_category = 0;
-                }
-                else if (pieceCategories.Value.TryGetValue(name, out int category))
-                    PieceTableCategories.ApplyConfiguredCategory(piece, (Piece.PieceCategory)category);
 
                 WearNTear wnt = GetWearNTearComponent(piece);
                 if (wnt != null)

@@ -1,19 +1,80 @@
 # BuildPiecesCustomized
-Customize individual build pieces. Set properties globally such as rain water ash lava damage immunity. Customize global material type properties.
 
-This mod allows you to customize most properties individually and some properties globally.
+Customize individual Valheim build pieces, apply common properties globally, and adjust structural material properties.
 
 ## Features
-* customize properties of individual pieces (you can also disable it, rename or set description)
-* set some most useful properties globally
-* change material properties to be able to build higher and wider
-* all configs are server-synced and will be reapplied on file or config change
+
+* Customize individual piece properties, including enabled state, name, description, requirements, placement rules, durability, targeting, and Hammer usage tags.
+* Apply common properties globally through prefab lists.
+* Change material support properties to build higher or farther.
+* Load JSON, YAML, and YML piece configuration files from the plugin directory or `BepInEx/config/shudnal.BuildPiecesCustomized`.
+* Synchronize server-controlled configuration and reapply changes when configuration files change.
+
+## Hammer usage tags
+
+Valheim 1.0 uses `Piece.UsageTagFlags` for the main Hammer build menu filters. BuildPiecesCustomized does not reassign legacy `PieceCategory` values.
+
+Individual piece files can define `usageTags`:
+
+```yaml
+usageTags:
+  - Building
+  - Doors
+```
+
+`usageTags` is a full replacement:
+
+* If `usageTags` is omitted, the piece keeps its original usage tags.
+* If `usageTags` is present, the listed built-in tags replace the current tag set.
+* `usageTags: []` clears all usage tags.
+* Tag names are case-insensitive when loading.
+* Only built-in Valheim `Piece.UsageTagFlags` names are supported. Numeric masks and custom runtime tags added by other mods are not supported.
+* Unsupported custom tags remain untouched while `usageTags` is omitted. Setting `usageTags` replaces the mask with built-in tags only.
+
+The generated `Pieces and properties.md` file contains the currently supported tag names, their localized in-game names, and the current tags of every discovered piece.
+
+## Bulk usage tag configuration
+
+For centralized overrides, create `Piece usage tags.yaml`, `Piece usage tags.yml`, or `Piece usage tags.json`.
+
+A single file can configure tags in both directions:
+
+```yaml
+pieces:
+  wood_door:
+    - Building
+    - Doors
+  custom_piece: []
+
+tags:
+  Defense:
+    - h_drawbridge01
+    - hayzestake_01
+```
+
+The two sections have different semantics:
+
+* `pieces`: `prefab -> tags`. The list fully replaces the piece's usage tags.
+* `tags`: `tag -> prefabs`. The tag is added to every listed piece without removing its other tags.
+
+The bulk usage-tag file has higher priority than individual piece files. Processing order is:
+
+1. Individual piece `usageTags`.
+2. Bulk `pieces` replacements.
+3. Bulk `tags` additions.
+
+This allows a piece to receive a complete tag set in `pieces` and then receive additional shared tags from `tags` in the same file.
+
+If more than one fixed-name bulk file is found, the last file in configuration search priority is used. The config directory is processed after the plugin directory.
+
+The old `Piece categories.json` / YAML format is no longer supported.
 
 ## Setting global values
 
-There are several global lists set in config values:
+There are several global lists set in the main config:
+
 * Clip everything
-* Allow in dungeon
+* Allow in dungeons
 * Can be repaired
 * Can be removed
 * Ash and lava immunity
@@ -21,161 +82,128 @@ There are several global lists set in config values:
 * Structural integrity
 * Is roof
 * Is leaky (non-roof)
-* Should be disabled
+* Disabled pieces
 
-All lists are comma-separated lists of prefab names. If prefab name is set in some list this value will override individual settings.
+All lists are comma-separated prefab names. If a prefab is present in a global list, that value overrides the corresponding individual setting.
 
-If you want all pieces to share that value then set "AllPieces" in config value. Except "Disabled pieces" config.
+Use `AllPieces` to apply a supported global rule to every piece. `Disabled pieces` does not use `AllPieces`.
 
 ## Material properties
 
-There are several config values combined in groups by material type. It allows to configure:
-* Max support multiplier - Support value of piece of given material when placed on the ground (blue)
-* Min support multiplier - How much support piece of given material should have to not break
-* Vertical stability multiplier - How much support is taken to build higher. Increase to make material more stable on height.
-* Horizontal stability multiplier - How much support is taken to build longer hanging beams of given material. Increase to make material more stable on longer beams.
+Material groups provide multipliers for:
 
-This values are multipliers of vanilla numbers and 1.0 means vanilla properties.
+* Max support multiplier - support provided when grounded.
+* Min support multiplier - minimum support before the piece breaks.
+* Vertical stability multiplier - increases or decreases vertical building stability.
+* Horizontal stability multiplier - increases or decreases horizontal building stability.
+
+A value of `1.0` keeps the vanilla material behavior.
 
 ## Automatically generated documentation
 
-When you open main menu or login into your world the file `Pieces and properties.md` will be generated and placed in \BepInEx\config\shudnal.BuildPiecesCustomized folder.
+When the main menu or a world initializes, `Pieces and properties.md` is generated in `BepInEx/config/shudnal.BuildPiecesCustomized`.
 
-That file contains all pieces from your current game and identifiers used to configure pieces.
+It contains:
 
-Use it to find exact prefab name of piece to start customizing.
+* Supported `usageTags` and their localized Hammer category names.
+* The bulk usage-tag file format and precedence rules.
+* Supported enum identifiers for other configurable properties.
+* All discovered build-piece prefab names.
+* Current usage tags for every listed piece.
 
-That file could be regenerated manually at any time using `bpcdocs` console command.
+Regenerate it at any time with:
 
-If you generate the file from main menu categories names will not be localized.
-
-If you generate the file while ingame and holding hammer in hand - catogories will have localized names.
-
-## Piece categories configuration
-
-Often all you need is to move groups of pieces from one category to another.
-
-If you create file `Piece categories.yaml` with content
-
-```
-3:
-  - copper_roof
-  - copper_roof_45
-```
-
-then `copper_roof` and `copper_roof_45` pieces will be moved into category 3 (Heavy Builds). These values will override values from single piece files.
-
-For `Piece categories.json` similar content would be
-
-```
-{
-  "3": [
-    "copper_roof",
-    "copper_roof_45"
-  ]
-}
+```text
+bpcdocs
 ```
 
 ## Setting individual values
 
-At first you need to generate template file with prefab name and current properties.
+Generate a template for one piece:
 
-Use console command `bpcsave [prefab name]` and it will create JSON file with prefab name in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder.
+```text
+bpcsave [prefab name]
+```
 
-Or use console command `bpcsaveall [prefab partial name or wildcard *]` and if prefab name matches it will create several JSON files with prefab names in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder.
+Generate templates for multiple pieces using a partial name or wildcard:
 
-If you trying to save file for already altered piece you should do it from main menu because in game it will be patched and will save its altered state.
+```text
+bpcsaveall [prefab partial name or wildcard *]
+```
 
-You can change properties in that file as you want and then save it.
+Files are created in `BepInEx/config/shudnal.BuildPiecesCustomized` using JSON by default or YAML when `Save piece data as YAML` is enabled.
 
-You can leave only several changed properties in the file. Every omitted property will fall to default value.
+You can remove every property you do not want to override. Missing properties preserve the default value captured from the piece prefab.
 
-After editing you can move that file in any subfolder in mods directory. You can also place this files in `\BepInEx\config\shudnal.BuildPiecesCustomized` directory (first you need to create it manually). Or you can leave it next to mod dll.
+Configuration files can be placed in subdirectories under either the plugin directory or `BepInEx/config/shudnal.BuildPiecesCustomized`. Files placed on the server are synchronized to clients according to ConditionalConfigSync policy.
 
-All *.json files from all subdirectories in `\BepInEx\config\shudnal.BuildPiecesCustomized` folder and plugin folder will be loaded on the world login.
+## Selected property notes
 
-On every file loading there will be line in log like this
+Most properties are self-explanatory. Some useful details:
 
-`[Info   :Build Pieces Customized] Found \BepInEx\plugins\shudnal-BuildPiecesCustomized\portal_wood.json`
+* `usageTags` - built-in Hammer usage tags. The list fully replaces the current tags; an empty list clears them.
+* `groundOnly` - piece can only be built on the ground.
+* `cultivatedGroundOnly` - piece can only be built on cultivated terrain.
+* `waterPiece` - piece must touch water when built.
+* `clipGround` - piece can clip into terrain.
+* `clipEverything` - piece can clip into other objects.
+* `noInWater` - piece cannot touch water when built.
+* `notOnWood` - piece cannot be placed on wood or hardwood surfaces.
+* `notOnTiltingSurface` - piece requires a relatively flat surface.
+* `notOnFloor` - piece requires a vertical surface.
+* `noClipping` - piece cannot clip other objects.
+* `inCeilingOnly` - piece must hang from a ceiling.
+* `onlyInTeleportArea` - piece can only be placed inside a teleport effect area.
+* `allowedInDungeons` - piece can be built in dungeon interiors.
+* `spaceRequirement` - minimum distance to another station extension.
+* `allowRotatedOverlap` - piece can overlap other pieces when rotated.
+* `vegetationGroundOnly` - vegetation requires cultivated ground.
+* `blockRadius` - prevents placing another similar piece inside this radius.
+* `extraPlacementDistance` - adds distance between the player and the placement position.
+* `targetNonPlayerBuilt` - enemies can target the object even when it was not player-built.
+* `primaryTarget` - enemies prioritize the object.
+* `randomTarget` - object can be selected as a random enemy target.
+* `onlyInBiome` - biome bit mask used by the game.
+* `noRoofWear` - controls rain and water wear.
+* `noSupportWear` - controls structural-integrity wear.
+* `supports` - controls whether other pieces can use this piece for support.
+* `hitNoise` - noise generated when hit.
+* `destroyNoise` - noise generated when destroyed.
+* `ashDamageImmune` - immunity to ash and lava damage.
+* `ashDamageResist` - reduced lava damage and Ashlands ignition resistance.
+* `triggerPrivateArea` - nearby wards react when the object is attacked.
 
-If you place that files on the server then its settings will be shared from the server.
+## Installation
 
-If you want to undo changes delete the file.
-
-## Piece categories in Valheim 1.0.7
-
-Built-in category IDs are `0` Misc, `1` Crafting, `2` BuildingWorkbench, `3` BuildingStonecutter,
-`4` Furniture, `5` DeepNorth, `6` Feasts, `7` Food, and `8` Meads. `100` (All) is a special
-broadcast category, not the index of an additional tab. `9` (Max) is reserved and must not be
-assigned to a piece in an individual file or in `Piece categories.json` / YAML.
-
-Custom category IDs are accepted only after an installed category provider registers them.
-An unknown, negative, or reserved category is ignored with a warning; the piece keeps its
-existing category. Assigning an arbitrary integer does not create a custom category.
-Use the generated documentation to find the categories available in the current installation.
-
-## Properties meaning
-
-Most properties are self-explanatory but some may need some more explanation.
-* groundOnly - if true - piece could only be built on the ground (like vanilla fireplace)
-* cultivatedGroundOnly - if true piece could only be built on terrain which was cultivated 
-* waterPiece - if true - piece should touch the water on built
-* clipGround - if true -  piece can clip into terrain
-* clipEverything - if true - piece can clip into any object
-* noInWater - if true - piece should not touch the water when built
-* notOnWood - if true - piece should not touch wood or hardwood surface
-* notOnTiltingSurface - if true - piece should be placed on rather flat surface
-* notOnFloor - if true - surface should be vertical
-* noClipping - if true - piece should not clip anything
-* inCeilingOnly - if true - object should hang from the ceiling
-* onlyInTeleportArea - if true - object should be placed near object emitting Teleport effect area (currently there are no such pieces)
-* allowedInDungeons - if true - object could be placed in dungeons (interior)
-* spaceRequirement - minimum distance to next station extension object
-* allowRotatedOverlap - if true - piece could clip into other pieces when rotated
-* vegetationGroundOnly - if true - vegetable should be placed on the cultivated ground
-* blockRadius - piece could not be placed if there are another similar piece in that radius (like Sap collector)
-* extraPlacementDistance - additional distance to object when placing (currently only Drakkar from Ashlands)
-* targetNonPlayerBuilt - if true enemies will attack that object if it wasn't built by players (bonfire piece had it set to false and Fulings doesn't attack their own bonfires)
-* primaryTarget - if true - monsters will attack that object firstly
-* randomTarget - if true - piece could be targeted by monsters (if disabled then object will be ignored as a target but still could take AoE damage)
-* onlyInBiome - i.e. if you want piece to be placed in several biomes and lets say it's meadows (1), black forest(8), and plains(16) you just need to add that code numbers like 1+8+16 = 25. Then you set "onlyInBiome: 25".
-
-* noRoofWear - water and rain immunity (if set to true, piece will take water damage, if set to false it will not take rain or water damage)
-* noSupportWear - piece will not be affected by structural integrity check (if set to false it will not break due to insufficient structural support)
-* supports - if true - piece will be able to support another pieces built on top. if false then you can't build anything touching only that piece
-* hitNoise - how much noise will be generated on hit (how far you will be heard by enemies)
-* destroyNoise - how much noise will be generated on destroy (how far you will be heard by enemies)
-* ashDamageImmune - if true - piece will not be affected by ash and lava damage
-* ashDamageResist - piece will take only 33% of lava damage and will not catch fire in Ashlands
-* triggerPrivateArea - if enabled - ward will flash when object is attacked (if player attack that piece next to NPCs they will become aggravated)
-
-## Installation (manual)
-copy BuildPiecesCustomized.dll to your BepInEx\Plugins\ folder.
+Copy `BuildPiecesCustomized.dll` to `BepInEx/plugins` or install the Thunderstore package.
 
 ## Incompatibility
-Mod is incompatible with deprecated or outdated mods with similar purpose.
 
-* Floors are Roofs - copy floors list into "List - Immune to -> Water damage" config and "List - Global setting -> Is Roof" config as is
-* Custom Building Material Proterties - edit material properties configs
-* Forever Build - edit either material properties or "Structural integrity" global list or noSupportWear value of individual piece
-* Build Piece Tweaks - similar purpose non updated for new Ashlands related properties
+The mod is incompatible with deprecated or outdated mods that patch the same piece properties directly.
 
-Everything mods from the list can do this mod can also do.
+* Floors are Roofs - use the water-damage and roof global settings.
+* Custom Building Material Properties - use the material property settings.
+* Forever Build - use material properties or the structural-integrity settings.
+* Build Piece Tweaks - overlapping piece customization.
 
-## Configurating
-The best way to handle configs is [Configuration Manager](https://thunderstore.io/c/valheim/p/shudnal/ConfigurationManager/).
+## Configuration UI
 
-Or [Official BepInEx Configuration Manager](https://thunderstore.io/c/valheim/p/Azumatt/Official_BepInEx_ConfigurationManager/).
+Recommended configuration managers:
+
+* [Configuration Manager](https://thunderstore.io/c/valheim/p/shudnal/ConfigurationManager/)
+* [Official BepInEx Configuration Manager](https://thunderstore.io/c/valheim/p/Azumatt/Official_BepInEx_ConfigurationManager/)
 
 ## Dependencies
 
-- [BepInExPack Valheim 5.4.2350](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
-- [ConditionalConfigSync 1.0.5](https://thunderstore.io/c/valheim/p/shudnal/ConditionalConfigSync/)
+* [BepInExPack Valheim 5.4.2350](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
+* [ConditionalConfigSync 1.0.5](https://thunderstore.io/c/valheim/p/shudnal/ConditionalConfigSync/)
 
-Install ConditionalConfigSync as a separate dependency; do not copy its DLLs into this mod's package.
+ConditionalConfigSync is a separate dependency and must not be bundled into this mod package.
 
 ## Donation
+
 [Buy Me a Coffee](https://buymeacoffee.com/shudnal)
 
 ## Discord
+
 [Join server](https://discord.gg/e3UtQB8GFK)

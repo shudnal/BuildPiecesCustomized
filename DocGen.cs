@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UnityEngine;
 using static BuildPiecesCustomized.BuildPiecesCustomized;
@@ -28,56 +27,70 @@ namespace BuildPiecesCustomized
             }
         }
 
-        private static void LogPieceCategories()
+        private static void LogUsageTags()
         {
-            var categories = new Dictionary<Piece.PieceCategory, string>();
+            sb.AppendLine("`usageTags` is an optional list of built-in Valheim Hammer usage tags.");
+            sb.AppendLine("If the property is omitted, the original usage tags are preserved.");
+            sb.AppendLine("If the property is present, the list fully replaces the current usage tags. An empty list clears them.");
+            sb.AppendLine("Tag names are case-insensitive when loading, but generated files use the canonical names below.");
+            sb.AppendLine("Numeric values and custom runtime tags added by other mods are not supported.");
+            sb.AppendLine("Unsupported custom tags are preserved when usageTags is omitted, but a usageTags replacement contains built-in tags only.");
+            sb.AppendLine();
+            sb.AppendLine("| Value | In-game name |");
+            sb.AppendLine("|---|---|");
+            foreach (PieceUsageTags.Definition definition in PieceUsageTags.Definitions)
+                sb.AppendLine($"| {definition.Name} | {PieceUsageTags.GetLocalizedDisplayName(definition)} |");
+        }
 
-            foreach (Piece.PieceCategory category in Enum.GetValues(typeof(Piece.PieceCategory)))
-                if ((int)category >= 0 && category != Piece.PieceCategory.Max)
-                    categories[category] = category.ToString();
-
-            // Documentation must not switch the player's build tool or execute HUD updates for inactive tables.
-            foreach (PieceTable table in Resources.FindObjectsOfTypeAll<PieceTable>())
-            {
-                if (table == null || table.m_categories == null)
-                    continue;
-
-                for (int i = 0; i < table.m_categories.Count; i++)
-                {
-                    Piece.PieceCategory category = table.m_categories[i];
-                    if ((int)category < 0 || category == Piece.PieceCategory.Max)
-                        continue;
-
-                    string label = table.m_categoryLabels != null && i < table.m_categoryLabels.Count
-                        ? table.m_categoryLabels[i]
-                        : null;
-
-                    if (!string.IsNullOrWhiteSpace(label) && Localization.instance != null)
-                        label = Localization.instance.Localize(label);
-
-                    if (!string.IsNullOrWhiteSpace(label))
-                        categories[category] = label;
-                    else if (!categories.ContainsKey(category))
-                        categories[category] = category.ToString();
-                }
-            }
-
-            foreach (var pair in categories.OrderBy(p => (int)p.Key))
-                sb.AppendLine($"* {(int)pair.Key} - {pair.Value}");
+        private static void LogBulkUsageTagFormat()
+        {
+            sb.AppendLine($"Use a file named `{PieceUsageTags.ConfigFileName}.yaml`, `{PieceUsageTags.ConfigFileName}.yml`, or `{PieceUsageTags.ConfigFileName}.json` for centralized usage tag overrides.");
+            sb.AppendLine("The bulk file has higher priority than individual piece files.");
+            sb.AppendLine("The `pieces` section replaces the full tag list for a piece. The `tags` section adds one tag to every listed piece.");
+            sb.AppendLine("Within the bulk file, `pieces` is applied first and `tags` is applied afterwards, so both directions can be mixed safely.");
+            sb.AppendLine();
+            sb.AppendLine("```yaml");
+            sb.AppendLine("pieces:");
+            sb.AppendLine("  wood_door:");
+            sb.AppendLine("    - Building");
+            sb.AppendLine("    - Doors");
+            sb.AppendLine("  custom_piece: []");
+            sb.AppendLine();
+            sb.AppendLine("tags:");
+            sb.AppendLine("  Defense:");
+            sb.AppendLine("    - h_drawbridge01");
+            sb.AppendLine("    - hayzestake_01");
+            sb.AppendLine("```");
+            sb.AppendLine();
+            sb.AppendLine("```json");
+            sb.AppendLine("{");
+            sb.AppendLine("  \"pieces\": {");
+            sb.AppendLine("    \"wood_door\": [\"Building\", \"Doors\"],");
+            sb.AppendLine("    \"custom_piece\": []");
+            sb.AppendLine("  },");
+            sb.AppendLine("  \"tags\": {");
+            sb.AppendLine("    \"Defense\": [\"h_drawbridge01\", \"hayzestake_01\"]");
+            sb.AppendLine("  }");
+            sb.AppendLine("}");
+            sb.AppendLine("```");
         }
 
         private static string GetFileText()
         {
             sb.Clear();
 
-            sb.AppendLine("This documentation generated automatically. It contains all available pieces and enumerations identifiers used to configure pieces.");
+            sb.AppendLine("This documentation is generated automatically. It contains all available pieces and identifiers used to configure pieces.");
             sb.AppendLine();
 
             sb.AppendLine("# Properties and available values");
             sb.AppendLine();
 
-            sb.AppendLine("## category");
-            LogPieceCategories();
+            sb.AppendLine("## usageTags - Hammer categories");
+            LogUsageTags();
+
+            sb.AppendLine();
+            sb.AppendLine("## Piece usage tags bulk file");
+            LogBulkUsageTagFormat();
 
             sb.AppendLine();
             sb.AppendLine("## comfortGroup");
@@ -95,11 +108,11 @@ namespace BuildPiecesCustomized
             sb.AppendLine("## damageModifiers");
             sb.AppendLine();
             sb.AppendLine("### type");
-            EnumToList(typeof(HitData.DamageType), noID:true);
+            EnumToList(typeof(HitData.DamageType), noID: true);
 
             sb.AppendLine();
             sb.AppendLine("### modifier");
-            EnumToList(typeof(HitData.DamageModifier), noID:true);
+            EnumToList(typeof(HitData.DamageModifier), noID: true);
 
             if ((bool)ObjectDB.instance)
             {
@@ -119,9 +132,9 @@ namespace BuildPiecesCustomized
                     sb.AppendLine($"* {station.Key} - {Localization.instance.Localize(station.Value.m_name)}");
 
                 sb.AppendLine();
-                sb.AppendLine("# Piece prefab names");
-                sb.AppendLine("Format \"Prefab name - Token - Localized name\"");
-                sb.AppendLine("List given in order as it appears in the game");
+                sb.AppendLine("# Piece prefab names and usage tags");
+                sb.AppendLine("Format: `Prefab name - Token - Localized name - usageTags`");
+                sb.AppendLine("Pieces are listed in the same order as their build tool.");
 
                 foreach (ItemDrop tool in ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Tool, ""))
                 {
@@ -136,7 +149,7 @@ namespace BuildPiecesCustomized
                         if (!item.TryGetComponent(out Piece piece))
                             continue;
 
-                        sb.AppendLine($"* {piece.name} - {piece.m_name} - {Localization.instance.Localize(piece.m_name)}");
+                        sb.AppendLine($"* {piece.name} - {piece.m_name} - {Localization.instance.Localize(piece.m_name)} - {PieceUsageTags.FormatForDocumentation(piece.m_usage)}");
                     }
                 }
             }
@@ -188,7 +201,5 @@ namespace BuildPiecesCustomized
                 GenerateDocumentationFile();
             }
         }
-
-
     }
 }
