@@ -94,14 +94,16 @@ namespace BuildPiecesCustomized
 
             sb.AppendLine();
             sb.AppendLine("## Deep North and environment properties");
-            sb.AppendLine("* `allowedInDeepSnow` - allows placement in Deep North deep-snow areas that normally reject the piece.");
-            sb.AppendLine("* `requireDeepSnow` - requires Deep North deep snow for placement.");
-            sb.AppendLine("* `roofCheckOffset` - offset used by WearNTear roof detection.");
-            sb.AppendLine("* `snowDamageImmune` - immunity to heavy-snow damage.");
-            sb.AppendLine("* `requiredPersistentEvent` - persistent-event identifier used by WearNTear event damage logic.");
-            sb.AppendLine("* `takeDamageIfInsideEvent` - enables the configured persistent-event damage condition.");
-            sb.AppendLine("* `eventDamage` / `eventDamageDeviation` - base persistent-event damage and random deviation.");
-            sb.AppendLine("* `requiredBiome` / `outsideRequiredBiomeDamage` - biome requirement and damage applied outside that biome.");
+            sb.AppendLine("| Property | Description |");
+            sb.AppendLine("|---|---|");
+            sb.AppendLine("| `allowedInDeepSnow` | Allows placement in Deep North deep-snow areas that normally reject the piece. |");
+            sb.AppendLine("| `requireDeepSnow` | Requires Deep North deep snow for placement. |");
+            sb.AppendLine("| `roofCheckOffset` | Offset used by WearNTear roof detection. |");
+            sb.AppendLine("| `snowDamageImmune` | Immunity to heavy-snow damage. |");
+            sb.AppendLine("| `requiredPersistentEvent` | Persistent-event identifier used by WearNTear event damage logic. |");
+            sb.AppendLine("| `takeDamageIfInsideEvent` | Enables the configured persistent-event damage condition. |");
+            sb.AppendLine("| `eventDamage`, `eventDamageDeviation` | Base persistent-event damage and random deviation. |");
+            sb.AppendLine("| `requiredBiome`, `outsideRequiredBiomeDamage` | Biome requirement and damage applied outside that biome. |");
 
             sb.AppendLine();
             sb.AppendLine("## comfortGroup");
@@ -139,12 +141,13 @@ namespace BuildPiecesCustomized
                     stations[recipe.m_craftingStation.name] = recipe.m_craftingStation;
                 }
 
+                sb.AppendLine("| Prefab | Localized name |");
+                sb.AppendLine("|---|---|");
                 foreach (KeyValuePair<string, CraftingStation> station in stations)
-                    sb.AppendLine($"* {station.Key} - {Localization.instance.Localize(station.Value.m_name)}");
+                    sb.AppendLine($"| {MarkdownCell(station.Key)} | {MarkdownCell(Localization.instance.Localize(station.Value.m_name))} |");
 
                 sb.AppendLine();
                 sb.AppendLine("# Piece prefab names and usage tags");
-                sb.AppendLine("Format: `Prefab name - Token - Localized name - usageTags`");
                 sb.AppendLine("Pieces are listed in the same order as their build tool.");
 
                 foreach (ItemDrop tool in ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Tool, ""))
@@ -154,13 +157,15 @@ namespace BuildPiecesCustomized
 
                     sb.AppendLine();
                     sb.AppendLine($"## {tool.name} - {tool.m_itemData.m_shared.m_name} - {Localization.instance.Localize(tool.m_itemData.m_shared.m_name)}");
+                    sb.AppendLine("| Prefab | Token | Localized name | usageTags |");
+                    sb.AppendLine("|---|---|---|---|");
 
                     foreach (GameObject item in tool.m_itemData.m_shared.m_buildPieces.m_pieces)
                     {
                         if (!item.TryGetComponent(out Piece piece))
                             continue;
 
-                        sb.AppendLine($"* {piece.name} - {piece.m_name} - {Localization.instance.Localize(piece.m_name)} - {PieceUsageTags.FormatForDocumentation(piece.m_usage)}");
+                        sb.AppendLine($"| {MarkdownCell(piece.name)} | {MarkdownCell(piece.m_name)} | {MarkdownCell(Localization.instance.Localize(piece.m_name))} | {MarkdownCell(PieceUsageTags.FormatForDocumentation(piece.m_usage))} |");
                     }
                 }
             }
@@ -170,8 +175,24 @@ namespace BuildPiecesCustomized
 
         private static void EnumToList(Type enumType, bool noID = false)
         {
+            if (noID)
+            {
+                sb.AppendLine("| Value |");
+                sb.AppendLine("|---|");
+            }
+            else
+            {
+                sb.AppendLine("| ID | Value |");
+                sb.AppendLine("|---:|---|");
+            }
+
             foreach (var value in Enum.GetValues(enumType))
-                sb.AppendLine(noID ? $"* {value}" : $"* {(int)value} - {value}");
+                sb.AppendLine(noID ? $"| {value} |" : $"| {(int)value} | {value} |");
+        }
+
+        private static string MarkdownCell(string value)
+        {
+            return (value ?? string.Empty).Replace("|", "\\|").Replace("\r", " ").Replace("\n", " ");
         }
 
         [HarmonyPatch(typeof(ObjectDB), nameof(ObjectDB.Awake))]
