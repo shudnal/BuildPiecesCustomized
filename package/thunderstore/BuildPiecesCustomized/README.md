@@ -1,4 +1,4 @@
-# BuildPiecesCustomized
+﻿# BuildPiecesCustomized
 
 Customize individual Valheim build pieces, apply common properties globally, and adjust structural material properties.
 
@@ -78,6 +78,7 @@ There are several global lists set in the main config:
 * Can be repaired
 * Can be removed
 * Ash and lava immunity
+* Heavy snow immunity
 * Water and rain damage immunity
 * Structural integrity
 * Is roof
@@ -155,6 +156,8 @@ Most properties are self-explanatory. Some useful details:
 * `inCeilingOnly` - piece must hang from a ceiling.
 * `onlyInTeleportArea` - piece can only be placed inside a teleport effect area.
 * `allowedInDungeons` - piece can be built in dungeon interiors.
+* `allowedInDeepSnow` - piece can be placed in Deep North deep-snow areas that normally reject it.
+* `requireDeepSnow` - piece can only be placed in Deep North deep snow.
 * `spaceRequirement` - minimum distance to another station extension.
 * `allowRotatedOverlap` - piece can overlap other pieces when rotated.
 * `vegetationGroundOnly` - vegetation requires cultivated ground.
@@ -165,13 +168,21 @@ Most properties are self-explanatory. Some useful details:
 * `randomTarget` - object can be selected as a random enemy target.
 * `onlyInBiome` - biome bit mask used by the game.
 * `noRoofWear` - controls rain and water wear.
+* `roofCheckOffset` - offset used by WearNTear roof detection.
 * `noSupportWear` - controls structural-integrity wear.
+* `snowDamageImmune` - immunity to heavy-snow damage.
 * `supports` - controls whether other pieces can use this piece for support.
 * `hitNoise` - noise generated when hit.
 * `destroyNoise` - noise generated when destroyed.
 * `ashDamageImmune` - immunity to ash and lava damage.
 * `ashDamageResist` - reduced lava damage and Ashlands ignition resistance.
 * `triggerPrivateArea` - nearby wards react when the object is attacked.
+* `requiredPersistentEvent` - persistent-event identifier used by WearNTear event damage logic.
+* `takeDamageIfInsideEvent` - enables the configured persistent-event damage condition.
+* `eventDamage` - base damage applied by the persistent-event rule.
+* `eventDamageDeviation` - random deviation applied to persistent-event damage.
+* `requiredBiome` - biome mask required by WearNTear.
+* `outsideRequiredBiomeDamage` - damage applied when the piece is outside `requiredBiome`.
 
 ## Installation
 

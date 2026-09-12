@@ -38,6 +38,8 @@ namespace BuildPiecesCustomized
         public bool? noClipping;
         public bool? onlyInTeleportArea;
         public bool? allowedInDungeons;
+        public bool? allowedInDeepSnow;
+        public bool? requireDeepSnow;
         public float? spaceRequirement;
         public bool? repairPiece;
         public bool? canBeRemoved;
@@ -54,7 +56,9 @@ namespace BuildPiecesCustomized
 
         public float? health;
         public bool? noRoofWear;
+        public float? roofCheckOffset;
         public bool? noSupportWear;
+        public bool? snowDamageImmune;
         public WearNTear.MaterialType? materialType;
         public bool? supports;
         public float? hitNoise;
@@ -67,6 +71,13 @@ namespace BuildPiecesCustomized
         public bool? burnable;
         public int? minToolTier;
         public bool? triggerPrivateArea;
+
+        public string? requiredPersistentEvent;
+        public bool? takeDamageIfInsideEvent;
+        public float? eventDamage;
+        public float? eventDamageDeviation;
+        public Heightmap.Biome? requiredBiome;
+        public float? outsideRequiredBiomeDamage;
 
         public List<string>? resources;
 
@@ -227,6 +238,12 @@ namespace BuildPiecesCustomized
             if (allowedInDungeons.HasValue)
                 piece.m_allowedInDungeons = allowedInDungeons.Value;
 
+            if (allowedInDeepSnow.HasValue)
+                piece.m_allowedInDeepSnow = allowedInDeepSnow.Value;
+
+            if (requireDeepSnow.HasValue)
+                piece.m_requireDeepSnow = requireDeepSnow.Value;
+
             if (spaceRequirement.HasValue)
                 piece.m_spaceRequirement = spaceRequirement.Value;
 
@@ -297,8 +314,14 @@ namespace BuildPiecesCustomized
                 if (noRoofWear.HasValue)
                     wnt.m_noRoofWear = noRoofWear.Value;
 
+                if (roofCheckOffset.HasValue)
+                    wnt.m_roofCheckOffset = roofCheckOffset.Value;
+
                 if (noSupportWear.HasValue)
                     wnt.m_noSupportWear = noSupportWear.Value;
+
+                if (snowDamageImmune.HasValue)
+                    wnt.m_snowDamageImmune = snowDamageImmune.Value;
 
                 if (supports.HasValue)
                     wnt.m_supports = supports.Value;
@@ -326,6 +349,24 @@ namespace BuildPiecesCustomized
 
                 if (triggerPrivateArea.HasValue)
                     wnt.m_triggerPrivateArea = triggerPrivateArea.Value;
+
+                if (requiredPersistentEvent != null)
+                    wnt.m_requiredPersistentEvent = requiredPersistentEvent;
+
+                if (takeDamageIfInsideEvent.HasValue)
+                    wnt.m_takeDamageIfInsideEvent = takeDamageIfInsideEvent.Value;
+
+                if (eventDamage.HasValue)
+                    wnt.m_eventDamage = eventDamage.Value;
+
+                if (eventDamageDeviation.HasValue)
+                    wnt.m_eventDamageDeviation = eventDamageDeviation.Value;
+
+                if (requiredBiome.HasValue)
+                    wnt.m_requiredBiome = requiredBiome.Value;
+
+                if (outsideRequiredBiomeDamage.HasValue)
+                    wnt.m_outsideRequiredBiomeDamage = outsideRequiredBiomeDamage.Value;
 
                 if (materialType.HasValue)
                     wnt.m_materialType = materialType.Value;
@@ -428,6 +469,8 @@ namespace BuildPiecesCustomized
             noClipping = piece.m_noClipping;
             onlyInTeleportArea = piece.m_onlyInTeleportArea;
             allowedInDungeons = piece.m_allowedInDungeons;
+            allowedInDeepSnow = piece.m_allowedInDeepSnow;
+            requireDeepSnow = piece.m_requireDeepSnow;
             spaceRequirement = piece.m_spaceRequirement;
             repairPiece = piece.m_repairPiece;
             canBeRemoved = piece.m_canBeRemoved;
@@ -451,7 +494,9 @@ namespace BuildPiecesCustomized
             {
                 health = wnt.m_health;
                 noRoofWear = wnt.m_noRoofWear;
+                roofCheckOffset = wnt.m_roofCheckOffset;
                 noSupportWear = wnt.m_noSupportWear;
+                snowDamageImmune = wnt.m_snowDamageImmune;
                 materialType = wnt.m_materialType;
                 supports = wnt.m_supports;
                 hitNoise = wnt.m_hitNoise;
@@ -463,6 +508,13 @@ namespace BuildPiecesCustomized
                 burnable = wnt.m_burnable;
                 minToolTier = wnt.m_minToolTier;
                 triggerPrivateArea = wnt.m_triggerPrivateArea;
+
+                requiredPersistentEvent = wnt.m_requiredPersistentEvent;
+                takeDamageIfInsideEvent = wnt.m_takeDamageIfInsideEvent;
+                eventDamage = wnt.m_eventDamage;
+                eventDamageDeviation = wnt.m_eventDamageDeviation;
+                requiredBiome = wnt.m_requiredBiome;
+                outsideRequiredBiomeDamage = wnt.m_outsideRequiredBiomeDamage;
 
                 damageModifiers = new List<string>()
                 {

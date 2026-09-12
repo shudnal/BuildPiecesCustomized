@@ -1,4 +1,7 @@
 # 1.3.0
+* Added Valheim 1.0 Deep North piece placement settings: `allowedInDeepSnow` and `requireDeepSnow`.
+* Added WearNTear heavy-snow, roof-check, persistent-event, and required-biome settings to generated piece configs.
+* Added a global `Heavy snow` immunity prefab list.
 * Replaced legacy piece category reassignment with Valheim 1.0 Hammer usage tag customization.
 * Added `usageTags` to individual piece files with full-replacement semantics and support for clearing all tags with an empty list.
 * Added `Piece usage tags.yaml` / JSON bulk configuration with both `pieces` (`prefab -> tags`) and `tags` (`tag -> prefabs`) sections.

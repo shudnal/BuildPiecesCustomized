@@ -47,6 +47,7 @@ namespace BuildPiecesCustomized
         internal static ConfigEntry<string> prefabListDisabled;
 
         internal static ConfigEntry<string> prefabListAshDamageImmune;
+        internal static ConfigEntry<string> prefabListSnowDamageImmune;
         internal static ConfigEntry<string> prefabListNoRoofWear;
         internal static ConfigEntry<string> prefabListNoSupportWear;
 
@@ -150,10 +151,12 @@ namespace BuildPiecesCustomized
             prefabListIsLeaky.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 
             prefabListAshDamageImmune = config("List - Immune to", "Ash and lava", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be immune to ash and lava damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
+            prefabListSnowDamageImmune = config("List - Immune to", "Heavy snow", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be immune to heavy snow damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
             prefabListNoRoofWear = config("List - Immune to", "Water damage", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be immune to water damage. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
             prefabListNoSupportWear = config("List - Immune to", "Structural integrity", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will not be needed support. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
 
             prefabListAshDamageImmune.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
+            prefabListSnowDamageImmune.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListNoRoofWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListNoSupportWear.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
 

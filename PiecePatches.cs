@@ -210,6 +210,7 @@ namespace BuildPiecesCustomized
             private static bool isRoof;
             private static bool isLeaky;
             private static bool ashDamageImmune;
+            private static bool snowDamageImmune;
             private static bool noRoofWear;
             private static bool noSupportWear;
 
@@ -220,6 +221,7 @@ namespace BuildPiecesCustomized
             private static HashSet<string> listIsRoof;
             private static HashSet<string> listIsLeaky;
             private static HashSet<string> listAshDamageImmune;
+            private static HashSet<string> listSnowDamageImmune;
             private static HashSet<string> listNoRoofWear;
             private static HashSet<string> listNoSupportWear;
             private static HashSet<string> listDisabled;
@@ -238,6 +240,7 @@ namespace BuildPiecesCustomized
                 listIsRoof = ConfigToHashSet(prefabListIsRoof.Value);
                 listIsLeaky = ConfigToHashSet(prefabListIsLeaky.Value);
                 listAshDamageImmune = ConfigToHashSet(prefabListAshDamageImmune.Value);
+                listSnowDamageImmune = ConfigToHashSet(prefabListSnowDamageImmune.Value);
                 listNoRoofWear = ConfigToHashSet(prefabListNoRoofWear.Value);
                 listNoSupportWear = ConfigToHashSet(prefabListNoSupportWear.Value);
                 listDisabled = ConfigToHashSet(prefabListDisabled.Value);
@@ -249,6 +252,7 @@ namespace BuildPiecesCustomized
                 isRoof = listIsRoof.Contains(allPiecesListIdentifier);
                 isLeaky = listIsLeaky.Contains(allPiecesListIdentifier);
                 ashDamageImmune = listAshDamageImmune.Contains(allPiecesListIdentifier);
+                snowDamageImmune = listSnowDamageImmune.Contains(allPiecesListIdentifier);
                 noRoofWear = listNoRoofWear.Contains(allPiecesListIdentifier);
                 noSupportWear = listNoSupportWear.Contains(allPiecesListIdentifier);
             }
@@ -311,6 +315,15 @@ namespace BuildPiecesCustomized
                         if (loggingEnabled.Value)
                             LogInfo($"Patching {pieceName} ash and lava immune");
                         wnt.m_ashDamageImmune = true;
+                    }
+
+                    if (snowDamageImmune)
+                        wnt.m_snowDamageImmune = true;
+                    else if (listSnowDamageImmune.Contains(name))
+                    {
+                        if (loggingEnabled.Value)
+                            LogInfo($"Patching {pieceName} heavy snow immune");
+                        wnt.m_snowDamageImmune = true;
                     }
 
                     if (noRoofWear)

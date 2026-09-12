@@ -93,11 +93,22 @@ namespace BuildPiecesCustomized
             LogBulkUsageTagFormat();
 
             sb.AppendLine();
+            sb.AppendLine("## Deep North and environment properties");
+            sb.AppendLine("* `allowedInDeepSnow` - allows placement in Deep North deep-snow areas that normally reject the piece.");
+            sb.AppendLine("* `requireDeepSnow` - requires Deep North deep snow for placement.");
+            sb.AppendLine("* `roofCheckOffset` - offset used by WearNTear roof detection.");
+            sb.AppendLine("* `snowDamageImmune` - immunity to heavy-snow damage.");
+            sb.AppendLine("* `requiredPersistentEvent` - persistent-event identifier used by WearNTear event damage logic.");
+            sb.AppendLine("* `takeDamageIfInsideEvent` - enables the configured persistent-event damage condition.");
+            sb.AppendLine("* `eventDamage` / `eventDamageDeviation` - base persistent-event damage and random deviation.");
+            sb.AppendLine("* `requiredBiome` / `outsideRequiredBiomeDamage` - biome requirement and damage applied outside that biome.");
+
+            sb.AppendLine();
             sb.AppendLine("## comfortGroup");
             EnumToList(typeof(Piece.ComfortGroup));
 
             sb.AppendLine();
-            sb.AppendLine("## onlyInBiome");
+            sb.AppendLine("## biome values (`onlyInBiome`, `requiredBiome`)");
             EnumToList(typeof(Heightmap.Biome));
 
             sb.AppendLine();
