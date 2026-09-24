@@ -25,7 +25,7 @@ namespace BuildPiecesCustomized
     {
         public const string pluginID = "shudnal.BuildPiecesCustomized";
         public const string pluginName = "Build Pieces Customized";
-        public const string pluginVersion = "1.3.0";
+        public const string pluginVersion = "1.3.1";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -40,7 +40,6 @@ namespace BuildPiecesCustomized
 
         internal static ConfigEntry<string> prefabListClipEverything;
         internal static ConfigEntry<string> prefabListAllowedInDungeons;
-        internal static ConfigEntry<string> prefabListRepairPiece;
         internal static ConfigEntry<string> prefabListCanBeRemoved;
         internal static ConfigEntry<string> prefabListIsRoof;
         internal static ConfigEntry<string> prefabListIsLeaky;
@@ -131,7 +130,6 @@ namespace BuildPiecesCustomized
 
             prefabListClipEverything = config("List - Global setting", "Clip everything", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will clip through each other. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
             prefabListAllowedInDungeons = config("List - Global setting", "Allow in dungeons", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be allowed to build in dungeons. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
-            prefabListRepairPiece = config("List - Global setting", "Can be repaired", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be repairable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
             prefabListCanBeRemoved = config("List - Global setting", "Can be removed", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be removeable. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces."));
             prefabListDisabled = config("List - Global setting", "Disabled pieces", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will be disabled."));
             prefabListIsRoof = config("List - Global setting", "Is Roof", defaultValue: "", GetDescriptionSeparatedStrings("Comma-separated list of pieces that will work as a roof. Set \"" + PiecePatches.GlobalPatches.allPiecesIdentifier + "\" identifier to apply for all pieces." +
@@ -144,7 +142,6 @@ namespace BuildPiecesCustomized
 
             prefabListClipEverything.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListAllowedInDungeons.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
-            prefabListRepairPiece.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListCanBeRemoved.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListDisabled.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();
             prefabListIsRoof.SettingChanged += (s, e) => PiecePatches.UpdatePiecesProperties();

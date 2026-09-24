@@ -205,7 +205,6 @@ namespace BuildPiecesCustomized
 
             private static bool clipEverything;
             private static bool allowedInDungeons;
-            private static bool repairPiece;
             private static bool canBeRemoved;
             private static bool isRoof;
             private static bool isLeaky;
@@ -216,7 +215,6 @@ namespace BuildPiecesCustomized
 
             private static HashSet<string> listClipEverything;
             private static HashSet<string> listAllowedInDungeons;
-            private static HashSet<string> listRepairPiece;
             private static HashSet<string> listCanBeRemoved;
             private static HashSet<string> listIsRoof;
             private static HashSet<string> listIsLeaky;
@@ -235,7 +233,6 @@ namespace BuildPiecesCustomized
             {
                 listClipEverything = ConfigToHashSet(prefabListClipEverything.Value);
                 listAllowedInDungeons = ConfigToHashSet(prefabListAllowedInDungeons.Value);
-                listRepairPiece = ConfigToHashSet(prefabListRepairPiece.Value);
                 listCanBeRemoved = ConfigToHashSet(prefabListCanBeRemoved.Value);
                 listIsRoof = ConfigToHashSet(prefabListIsRoof.Value);
                 listIsLeaky = ConfigToHashSet(prefabListIsLeaky.Value);
@@ -247,7 +244,6 @@ namespace BuildPiecesCustomized
 
                 clipEverything = listClipEverything.Contains(allPiecesListIdentifier);
                 allowedInDungeons = listAllowedInDungeons.Contains(allPiecesListIdentifier);
-                repairPiece = listRepairPiece.Contains(allPiecesListIdentifier);
                 canBeRemoved = listCanBeRemoved.Contains(allPiecesListIdentifier);
                 isRoof = listIsRoof.Contains(allPiecesListIdentifier);
                 isLeaky = listIsLeaky.Contains(allPiecesListIdentifier);
@@ -282,15 +278,6 @@ namespace BuildPiecesCustomized
                     if (loggingEnabled.Value)
                         LogInfo($"Patching {pieceName} allowed in dungeons");
                     piece.m_allowedInDungeons = true;
-                }
-
-                if (repairPiece)
-                    piece.m_repairPiece = true;
-                else if (listRepairPiece.Contains(name))
-                {
-                    if (loggingEnabled.Value)
-                        LogInfo($"Patching {pieceName} can be repaired");
-                    piece.m_repairPiece = true;
                 }
 
                 if (canBeRemoved)

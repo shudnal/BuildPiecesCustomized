@@ -75,7 +75,6 @@ There are several global lists set in the main config:
 
 * Clip everything
 * Allow in dungeons
-* Can be repaired
 * Can be removed
 * Ash and lava immunity
 * Heavy snow immunity

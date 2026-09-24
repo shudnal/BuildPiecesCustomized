@@ -41,7 +41,6 @@ namespace BuildPiecesCustomized
         public bool? allowedInDeepSnow;
         public bool? requireDeepSnow;
         public float? spaceRequirement;
-        public bool? repairPiece;
         public bool? canBeRemoved;
         public bool? allowRotatedOverlap;
         public bool? vegetationGroundOnly;
@@ -246,9 +245,6 @@ namespace BuildPiecesCustomized
 
             if (spaceRequirement.HasValue)
                 piece.m_spaceRequirement = spaceRequirement.Value;
-
-            if (repairPiece.HasValue)
-                piece.m_repairPiece = repairPiece.Value;
 
             if (canBeRemoved.HasValue)
                 piece.m_canBeRemoved = canBeRemoved.Value;
@@ -472,7 +468,6 @@ namespace BuildPiecesCustomized
             allowedInDeepSnow = piece.m_allowedInDeepSnow;
             requireDeepSnow = piece.m_requireDeepSnow;
             spaceRequirement = piece.m_spaceRequirement;
-            repairPiece = piece.m_repairPiece;
             canBeRemoved = piece.m_canBeRemoved;
             station = piece.m_craftingStation ? piece.m_craftingStation.m_name : "";
             onlyInBiome = piece.m_onlyInBiome;

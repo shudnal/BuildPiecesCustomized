@@ -1,3 +1,7 @@
+# 1.3.1
+* Removed the incorrect global `Can be repaired` setting that could make pieces disappear from the build menu.
+* Removed `repairPiece` from individual JSON/YAML piece settings and generated piece files. The mod no longer changes the repair-action flag.
+
 # 1.3.0
 * Added Valheim 1.0 Deep North piece placement settings: `allowedInDeepSnow` and `requireDeepSnow`.
 * Added WearNTear heavy-snow, roof-check, persistent-event, and required-biome settings to generated piece configs.
